@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../mockData/mock_courses.dart';
 import '../../models/course.dart';
@@ -22,11 +21,9 @@ import '../../widgets/category_tab_bar.dart';
 import '../../widgets/content_card.dart';
 import '../../widgets/course_carousel_section.dart';
 import '../../widgets/empty_state.dart';
-import '../../widgets/pill_input.dart';
+import '../../widgets/home_search_bar.dart';
 import '../../widgets/responsive_body.dart';
 import 'course_filter_screen.dart';
-
-const _maxRecentCourseSearches = 5;
 
 const _categories = ['Counseling', 'Technology', 'Design', 'Finance', 'Science', 'Placement'];
 
@@ -70,11 +67,6 @@ class CoursesExploreScreen extends StatefulWidget {
 }
 
 class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
-  final _searchController = TextEditingController();
-  // Lets a typed search be saved to Recent searches when the user simply taps
-  // away - most people on a phone never press the keyboard's Done key, and
-  // history used to be saved only on that key.
-  final _searchFocus = FocusNode();
   final _scrollController = ScrollController();
   // This screen is mounted at branch 1 for school (Browse tab) and branch 3
   // for college (Courses tab) — see BrowseTabScreen/TabsScaffold, which pick
@@ -84,7 +76,6 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
   int? _registeredBranchIndex;
 
   CourseFilterSelection _filter = const CourseFilterSelection();
-  List<String> _recentSearches = [];
   // Desktop-only tabs+grid state (see _desktopCourseTabsGrid) — mobile/
   // tablet never read this, so it can't affect the carousel-stack view.
   String? _selectedCourseTab;
@@ -92,40 +83,6 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
   Future<void> _openFilter() async {
     final result = await context.push<CourseFilterSelection>('/school/course-filter', extra: _filter);
     if (result != null) setState(() => _filter = result);
-  }
-
-  // Mirrors search_screen.dart's own recent-searches mechanism exactly —
-  // same load/save/cap-at-5/dedupe shape, just against this screen's own
-  // prefs key since Courses previously had no recent-searches at all.
-  Future<void> _loadRecentSearches() async {
-    final prefs = await SharedPreferences.getInstance();
-    if (!mounted) return;
-    setState(() => _recentSearches = prefs.getStringList(recentCourseSearchesPrefsKey) ?? []);
-  }
-
-  Future<void> _saveRecentSearch(String query) async {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty) return;
-    final prefs = await SharedPreferences.getInstance();
-    final updated = [trimmed, ..._recentSearches.where((s) => s.toLowerCase() != trimmed.toLowerCase())].take(_maxRecentCourseSearches).toList();
-    await prefs.setStringList(recentCourseSearchesPrefsKey, updated);
-    if (!mounted) return;
-    setState(() => _recentSearches = updated);
-  }
-
-  Future<void> _clearRecentSearches() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(recentCourseSearchesPrefsKey);
-    if (!mounted) return;
-    setState(() => _recentSearches = []);
-  }
-
-  void _selectSearch(String query) {
-    setState(() {
-      _searchController.text = query;
-      _searchController.selection = TextSelection.collapsed(offset: query.length);
-    });
-    _saveRecentSearch(query);
   }
 
   @override
@@ -138,17 +95,11 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
         _scrollController.animateTo(0, duration: const Duration(milliseconds: 300), curve: Curves.easeOut);
       }
     });
-    _loadRecentSearches();
-    _searchFocus.addListener(() {
-      if (!_searchFocus.hasFocus) _saveRecentSearch(_searchController.text);
-    });
   }
 
   @override
   void dispose() {
     if (_registeredBranchIndex != null) ScrollToTopRegistry.unregister(_registeredBranchIndex!);
-    _searchController.dispose();
-    _searchFocus.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -162,13 +113,86 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
   // scrollable list, so they scroll away with everything else." No new
   // scroll-direction-tracking code needed — scrolling back up naturally
   // brings them back the same way it brings back any earlier list content.
-  List<Widget> _headerItems(double topInset, bool isFiltering, bool isSchool, bool isTablet) => [
-        Padding(
-          // isTablet adds AppSpacing.xl on top — sits directly under
-          // TopNavBar's 64px bar with nothing else providing clearance.
-          padding: EdgeInsets.fromLTRB(AppSpacing.xl, topInset + AppSpacing.sm + (isTablet ? AppSpacing.xl : 0), AppSpacing.xl, 0),
-          child: Text('Courses', textAlign: TextAlign.left, style: AppTextStyles.h1.copyWith(color: AppColors.ink)),
-        ),
+  // Pinned above the scrolling content (like Home): the title plus the same
+  // suggest-as-you-type search bar the Home feed uses, and the filter button.
+  // Typing never filters the page behind it: you pick a suggestion or press the
+  // tick, and the results open on their own screen (/courses/search).
+  Widget _pinnedHeader(double topInset, bool isFiltering, bool isTablet) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            // isTablet adds AppSpacing.xl on top — sits directly under
+            // TopNavBar's 64px bar with nothing else providing clearance.
+            padding: EdgeInsets.fromLTRB(AppSpacing.xl, topInset + AppSpacing.sm + (isTablet ? AppSpacing.xl : 0), AppSpacing.xl, 0),
+            child: Text('Courses', textAlign: TextAlign.left, style: AppTextStyles.h1.copyWith(color: AppColors.ink)),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.md),
+            child: Row(
+              children: [
+                Expanded(
+                  child: HomeSearchBar(
+                    hint: 'Search courses',
+                    compactHint: 'Search courses',
+                    recentKey: recentCourseSearchesPrefsKey,
+                    termsBuilder: courseSearchSuggestionTerms,
+                    starters: _popularSearches,
+                    routeFor: (q) => '/courses/search?q=${Uri.encodeQueryComponent(q)}',
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+              GestureDetector(
+                onTap: _openFilter,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      alignment: Alignment.center,
+                      // Plain circle, no border, offWhite fill in both states —
+                      // matches every other standalone icon-only button in the
+                      // app (header search/bell, the opportunity-detail
+                      // bookmark/chat buttons). "Active" is signaled the same
+                      // way the bookmark button does it — swap to the filled
+                      // glyph + ink tint — rather than inverting the whole
+                      // button's fill, which no other icon button here does.
+                      decoration: const BoxDecoration(color: AppColors.offWhite, shape: BoxShape.circle),
+                      child: Icon(
+                        isFiltering ? Ionicons.options : Ionicons.options_outline,
+                        size: 20,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    // Same permanent brand dot as Home's filter icon — a
+                    // standing reminder that Courses is scoped to the
+                    // user's own picks, not a one-time nudge. (11, 12), not
+                    // Home's (9, 10): this button is 44px, not 40px — see
+                    // home_header.dart's own note that (11, 12) was this
+                    // exact ratio's value before that icon shrank to 40px.
+                    Positioned(
+                      top: 11,
+                      right: 12,
+                      child: Container(
+                        width: 9,
+                        height: 9,
+                        decoration: BoxDecoration(
+                          color: AppColors.brand,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.offWhite, width: 1.5),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ],
+            ),
+          ),
+        ],
+      );
+
+  List<Widget> _headerItems(bool isSchool) => [
         Padding(
           padding: const EdgeInsets.only(top: AppSpacing.md),
           child: AutoCarousel(
@@ -218,68 +242,6 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
                   ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.md, AppSpacing.xl, AppSpacing.md),
-          child: Row(
-            children: [
-              Expanded(
-                child: PillInput(
-                  controller: _searchController,
-                  focusNode: _searchFocus,
-                  placeholder: 'Search courses',
-                  onChanged: (_) => setState(() {}),
-                  onSubmitted: _saveRecentSearch,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              GestureDetector(
-                onTap: _openFilter,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      alignment: Alignment.center,
-                      // Plain circle, no border, offWhite fill in both states —
-                      // matches every other standalone icon-only button in the
-                      // app (header search/bell, the opportunity-detail
-                      // bookmark/chat buttons). "Active" is signaled the same
-                      // way the bookmark button does it — swap to the filled
-                      // glyph + ink tint — rather than inverting the whole
-                      // button's fill, which no other icon button here does.
-                      decoration: const BoxDecoration(color: AppColors.offWhite, shape: BoxShape.circle),
-                      child: Icon(
-                        isFiltering ? Ionicons.options : Ionicons.options_outline,
-                        size: 20,
-                        color: AppColors.ink,
-                      ),
-                    ),
-                    // Same permanent brand dot as Home's filter icon — a
-                    // standing reminder that Courses is scoped to the
-                    // user's own picks, not a one-time nudge. (11, 12), not
-                    // Home's (9, 10): this button is 44px, not 40px — see
-                    // home_header.dart's own note that (11, 12) was this
-                    // exact ratio's value before that icon shrank to 40px.
-                    Positioned(
-                      top: 11,
-                      right: 12,
-                      child: Container(
-                        width: 9,
-                        height: 9,
-                        decoration: BoxDecoration(
-                          color: AppColors.brand,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.offWhite, width: 1.5),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
       ];
 
   Widget _resultCard(Course c) {
@@ -289,11 +251,7 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
       title: c.title,
       meta: [c.duration, '${c.modules} modules'],
       linkLabel: 'View syllabus',
-      onTap: () {
-        // Opening a result is the clearest signal the search was useful.
-        _saveRecentSearch(_searchController.text);
-        context.push('/course/${c.id}');
-      },
+      onTap: () => context.push('/course/${c.id}'),
     );
   }
 
@@ -390,9 +348,6 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.of(context).padding.top;
-    final query = _searchController.text.trim().toLowerCase();
-    final isSearching = query.isNotEmpty;
-
     final user = context.watch<AppState>().user;
     final isSchool = user?.segment == Segment.school;
     final aptitudeClusters = user?.aptitudeResults?.matches.map((m) => m.cluster).toList() ?? const <String>[];
@@ -406,9 +361,9 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
     // mutually exclusive modes — filterCoursesAdvanced already supports a
     // query alongside its facets (Round V), so both narrow the same result
     // set together.
-    final hasQuery = isSearching || isFiltering;
+    final hasQuery = isFiltering;
     final results = hasQuery
-        ? filterCoursesAdvanced(categories: _filter.categories, durationBuckets: _filter.durationBuckets, query: isSearching ? query : null)
+        ? filterCoursesAdvanced(categories: _filter.categories, durationBuckets: _filter.durationBuckets)
         : const <Course>[];
     final width = MediaQuery.sizeOf(context).width;
     final isTablet = AppBreakpoints.of(context) == AppBreakpoint.tablet;
@@ -416,11 +371,7 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
     // _desktopCourseTabsGrid's identical comment above).
     final columns = width >= AppBreakpoints.tablet ? 2 : (width >= AppBreakpoints.tablet ? 2 : 1);
 
-    String emptyMessage() {
-      if (isSearching && isFiltering) return 'No courses match "$query" with these filters.';
-      if (isSearching) return 'No courses match "$query".';
-      return 'No courses match these filters.';
-    }
+    String emptyMessage() => 'No courses match these filters.';
 
     // Every state below renders as exactly one ListView — the previous
     // isFiltering branch used to nest a second, independently-scrolling
@@ -429,7 +380,7 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
     late final List<Widget> bodyItems;
     if (hasQuery) {
       bodyItems = [
-        ..._headerItems(topInset, isFiltering, isSchool, isTablet),
+        ..._headerItems(isSchool),
         Padding(
           padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.sm),
           child: Row(
@@ -440,14 +391,6 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
                   style: AppTextStyles.body.copyWith(color: AppColors.gray500, fontSize: 12, fontWeight: AppFontWeight.medium),
                 ),
               ),
-              if (isSearching)
-                GestureDetector(
-                  onTap: () => setState(_searchController.clear),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: AppSpacing.xs),
-                    child: Text('Clear search', style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 12, fontWeight: AppFontWeight.semibold)),
-                  ),
-                ),
               if (isFiltering)
                 GestureDetector(
                   onTap: () => setState(() => _filter = const CourseFilterSelection()),
@@ -468,52 +411,9 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
           ..._resultWidgets(results, columns),
       ];
     } else {
-      final recentSearchWidgets = [
-        // Recent searches — same "quick re-run a past search" convenience
-        // the opportunity Search screen already offers, only shown once
-        // there's actually something to show and before any query/filter
-        // is active.
-        if (_recentSearches.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.md),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Recent searches', style: AppTextStyles.body.copyWith(color: AppColors.ink, fontWeight: AppFontWeight.bold, fontSize: 16)),
-                GestureDetector(
-                  onTap: _clearRecentSearches,
-                  child: Text('Clear', style: AppTextStyles.caption.copyWith(color: AppColors.ink, fontSize: 12, fontWeight: AppFontWeight.semibold)),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.xl),
-            child: Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: _recentSearches.map((s) => _RecentSearchChip(label: s, onTap: () => _selectSearch(s))).toList(),
-            ),
-          ),
-        ] else ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.md),
-            child: Text('Popular searches', style: AppTextStyles.body.copyWith(color: AppColors.ink, fontWeight: AppFontWeight.bold, fontSize: 16)),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.xl),
-            child: Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: _popularSearches.map((s) => _RecentSearchChip(label: s, onTap: () => _selectSearch(s))).toList(),
-            ),
-          ),
-        ],
-      ];
       if (isTablet) {
         bodyItems = [
-          ..._headerItems(topInset, isFiltering, isSchool, isTablet),
-          ...recentSearchWidgets,
+          ..._headerItems(isSchool),
           // Desktop-only: category tabs + one shared grid, replacing the
           // carousel-per-category stack below. Mobile/tablet never reach
           // this branch.
@@ -525,8 +425,7 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
           for (final category in _categories) CourseCarouselSection(title: category, courses: filterCourses(category)),
         ];
         bodyItems = [
-          ..._headerItems(topInset, isFiltering, isSchool, isTablet),
-          ...recentSearchWidgets,
+          ..._headerItems(isSchool),
           // No manual inter-carousel gap needed — CarouselSectionHeading
           // already supplies a divider + AppSpacing.xl clearance above each
           // one, including the first.
@@ -537,42 +436,25 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: ResponsiveBody(maxWidth: isTablet ? 1224 : (hasQuery ? 720 : AppBreakpoints.maxContentWidth), child: ListView(
-        controller: _scrollController,
-        padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
-        children: bodyItems,
-      )),
-    );
-  }
-}
-
-/// Plain tappable chip for a past Courses search — same visual language as
-/// search_screen.dart's own `_SearchChip`, kept as a separate small widget
-/// here rather than importing that screen's private class.
-class _RecentSearchChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-  const _RecentSearchChip({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-        decoration: BoxDecoration(color: AppColors.offWhite, borderRadius: BorderRadius.circular(AppRadius.pill)),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
+      body: ResponsiveBody(
+        maxWidth: isTablet ? 1224 : (hasQuery ? 720 : AppBreakpoints.maxContentWidth),
+        child: Column(
           children: [
-            const Icon(Ionicons.time_outline, size: 14, color: AppColors.gray500),
-            const SizedBox(width: AppSpacing.sm),
-            Text(label, style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 12, fontWeight: AppFontWeight.medium)),
+            _pinnedHeader(topInset, isFiltering, isTablet),
+            Expanded(
+              child: ListView(
+                controller: _scrollController,
+                padding: const EdgeInsets.only(bottom: AppSpacing.xxxl),
+                children: bodyItems,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
+
 
 /// One trust-badge card in the credibility carousel above the search bar.
 /// Deliberately the same design as Home's promo cards ("Get recruiters to

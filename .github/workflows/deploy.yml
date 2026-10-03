@@ -45,7 +45,7 @@ jobs:
       # browser from other Flutter web apps, and it removes several MB of
       # canvaskit/*.wasm from this site's own payload — a meaningful chunk
       # of first-load time.
-      - run: flutter build web --release --base-href /pitchvilla_placementapp_frontend/ --no-tree-shake-icons
+      - run: flutter build web --release --base-href /pitchvilla_placementapp_frontend/ --no-tree-shake-icons --pwa-strategy=none
 
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1509,16 +1509,22 @@ class _IntroStep extends StatelessWidget {
                                     // hit and fixed for _FactRow's own
                                     // label column elsewhere in this file.
                                     SizedBox(
-                                      width: 92,
+                                      width: 72,
                                       child: Text(r.$2, style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12)),
                                     ),
                                     Expanded(
-                                      child: Text(
-                                        r.$3,
-                                        textAlign: TextAlign.left,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: AppTextStyles.body.copyWith(color: AppColors.ink, fontWeight: AppFontWeight.medium, fontSize: 12),
+                                      // Shrinks a long name/course to fit rather than
+                                      // cutting it off ("Aayusha Pag…").
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          r.$3,
+                                          textAlign: TextAlign.left,
+                                          maxLines: 1,
+                                          softWrap: false,
+                                          style: AppTextStyles.body.copyWith(color: AppColors.ink, fontWeight: AppFontWeight.medium, fontSize: 12),
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(width: AppSpacing.sm),

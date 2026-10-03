@@ -592,6 +592,10 @@ class _ResumeScreenState extends State<ResumeScreen> {
                       : Padding(
                           padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, AppSpacing.xxxl),
                           child: Column(
+                    // stretch (not the default centre): each summary section
+                    // shrink-wrapped to its content and was centred, which is
+                    // what centred Full name / Skills / Education on this page.
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       Text('Complete your resume', style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 14, fontWeight: AppFontWeight.medium)),
                       Padding(

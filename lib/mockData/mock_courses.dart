@@ -399,6 +399,16 @@ List<Course> filterCourses([String? category]) {
 /// instead of being a separate, mutually-exclusive mode — matches title and
 /// category, mirroring filterOpportunities' own multi-field `.contains()`
 /// approach.
+/// Suggestion pool for the Courses search box: every course title and category.
+List<String> courseSearchSuggestionTerms() {
+  final terms = <String>{};
+  for (final c in mockCourses) {
+    terms.add(c.title);
+    terms.add(c.category);
+  }
+  return terms.toList()..sort();
+}
+
 List<Course> filterCoursesAdvanced({
   List<String> categories = const [],
   List<String> durationBuckets = const [],

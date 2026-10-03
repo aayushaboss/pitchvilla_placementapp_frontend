@@ -14,6 +14,8 @@ import '../theme/text_styles.dart';
 const _recentSearchesKey = 'recent_opportunity_searches';
 const _maxRecentSearches = 5;
 
+String _opportunityRoute(String q) => '/opportunities?q=${Uri.encodeQueryComponent(q)}';
+
 /// Single pinned search bar for the college Home feed — replaces the old
 /// dedicated `/search` screen. Focus it and a dropdown opens: recent
 /// searches (or, first time, a few starter suggestions), then typed-match
@@ -23,12 +25,39 @@ const _maxRecentSearches = 5;
 /// Self-contained fixed-height field (not built on PillInput) so it drops
 /// cleanly into a Row/Expanded on the feed without an unbounded-height
 /// layout.
+///
+/// Also the search experience for Courses: the defaults are the jobs search;
+/// Courses passes its own hint / history key / suggestion terms / starter
+/// chips / destination route, so both tabs behave identically (type, then
+/// suggestions, then pick one or press the tick, then a results screen).
 class HomeSearchBar extends StatefulWidget {
   // 40 for TopNavBar (matches the bell's own 40px circle instead of
   // towering over every other nav element at the field's original
   // Home-feed height) — Home's own usage keeps the original 54.
   final double height;
-  const HomeSearchBar({super.key, this.height = 54});
+  final String hint;
+  final String compactHint;
+  final String recentKey;
+
+  /// Suggestion pool; null = job / company / role terms.
+  final List<String> Function()? termsBuilder;
+
+  /// Shown before anything is typed and there is no history; null = popular roles.
+  final List<String>? starters;
+
+  /// Where a finished search goes; null = the jobs results list.
+  final String Function(String query)? routeFor;
+
+  const HomeSearchBar({
+    super.key,
+    this.height = 54,
+    this.hint = 'Search jobs, companies, roles',
+    this.compactHint = 'Search jobs, roles...',
+    this.recentKey = _recentSearchesKey,
+    this.termsBuilder,
+    this.starters,
+    this.routeFor,
+  });
 
   @override
   State<HomeSearchBar> createState() => _HomeSearchBarState();
@@ -42,8 +71,8 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
   OverlayEntry? _entry;
 
   List<String> _recent = [];
-  late final List<String> _terms = searchSuggestionTerms();
-  static final List<String> _starters = mockAllRoles.take(6).toList();
+  late final List<String> _terms = (widget.termsBuilder ?? searchSuggestionTerms)();
+  late final List<String> _starters = widget.starters ?? mockAllRoles.take(6).toList();
 
   @override
   void initState() {
@@ -66,7 +95,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
   Future<void> _loadRecent() async {
     final prefs = await SharedPreferences.getInstance();
     if (!mounted) return;
-    setState(() => _recent = prefs.getStringList(_recentSearchesKey) ?? []);
+    setState(() => _recent = prefs.getStringList(widget.recentKey) ?? []);
     _entry?.markNeedsBuild();
   }
 
@@ -75,14 +104,14 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
     if (t.isEmpty) return;
     final prefs = await SharedPreferences.getInstance();
     final updated = [t, ..._recent.where((s) => s.toLowerCase() != t.toLowerCase())].take(_maxRecentSearches).toList();
-    await prefs.setStringList(_recentSearchesKey, updated);
+    await prefs.setStringList(widget.recentKey, updated);
     if (!mounted) return;
     setState(() => _recent = updated);
   }
 
   Future<void> _clearRecent() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_recentSearchesKey);
+    await prefs.remove(widget.recentKey);
     if (!mounted) return;
     setState(() => _recent = []);
     _entry?.markNeedsBuild();
@@ -125,7 +154,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
     _controller.clear();
     _focusNode.unfocus();
     _hide();
-    context.push('/opportunities?q=${Uri.encodeQueryComponent(t)}');
+    context.push((widget.routeFor ?? _opportunityRoute)(t));
   }
 
   List<_Suggestion> _suggestions() {
@@ -258,7 +287,7 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
                 decoration: InputDecoration(
                   isCollapsed: true,
                   border: InputBorder.none,
-                  hintText: widget.height < 54 ? 'Search jobs, roles...' : 'Search jobs, companies, roles',
+                  hintText: widget.height < 54 ? widget.compactHint : widget.hint,
                   hintStyle: AppTextStyles.body.copyWith(fontSize: widget.height < 54 ? 13 : 14, color: AppColors.gray400),
                 ),
               ),

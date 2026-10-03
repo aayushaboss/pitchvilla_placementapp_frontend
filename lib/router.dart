@@ -28,6 +28,7 @@ import 'screens/school/aptitude_intro_screen.dart';
 import 'screens/school/aptitude_screen.dart';
 import 'screens/school/course_category_picker_screen.dart';
 import 'screens/school/course_filter_screen.dart';
+import 'screens/school/course_search_results_screen.dart';
 import 'screens/school/courses_explore_screen.dart';
 import 'screens/school/results_screen.dart';
 import 'screens/shared/application_detail_screen.dart';
@@ -245,6 +246,7 @@ GoRouter buildRouter(AppState appState, GlobalKey<ScaffoldMessengerState> scaffo
           );
         },
       ),
+      GoRoute(path: '/courses/search', builder: (context, state) => CourseSearchResultsScreen(query: state.uri.queryParameters['q'] ?? '')),
       GoRoute(path: '/application/:id', builder: (context, state) => ApplicationDetailScreen(id: state.pathParameters['id']!)),
       GoRoute(path: '/applications/recently-deleted', builder: (context, state) => const RecentlyDeletedApplicationsScreen()),
       GoRoute(path: '/course/:id', builder: (context, state) => CourseDetailScreen(id: state.pathParameters['id']!)),

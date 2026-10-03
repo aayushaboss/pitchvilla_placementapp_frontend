@@ -211,11 +211,13 @@ class _GoalsScreenState extends State<GoalsScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.xl),
                     child: Row(
-                      children: _goals.map((g) {
+                      children: _goals.expand((g) {
                         final selected = _goal == g.key;
-                        return Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(right: g == _goals.last ? 0 : AppSpacing.md),
+                        return [
+                          // A spacer between tiles (not right-padding inside the Expanded)
+                          // so all three tiles come out exactly the same width.
+                          if (g != _goals.first) const SizedBox(width: AppSpacing.md),
+                          Expanded(
                             child: GestureDetector(
                               onTap: () {
                                 HapticFeedback.lightImpact();
@@ -225,7 +227,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                 height: _goalCardHeight,
                                 child: Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.lg),
+                                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.lg),
                                   decoration: BoxDecoration(
                                     color: selected ? AppColors.white : AppColors.offWhite,
                                     borderRadius: BorderRadius.circular(AppRadius.xl),
@@ -249,15 +251,20 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                         child: SizedBox(
                                           height: _goalTitleHeight,
                                           width: double.infinity,
-                                          child: Text(
-                                            g.title,
-                                            textAlign: TextAlign.center,
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: AppTextStyles.body.copyWith(
-                                              color: AppColors.ink,
-                                              fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.medium,
-                                              height: 1.25,
+                                          // One line only: "Internship" used to break mid-word
+                                          // ("Internshi / p") in the narrow tile.
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            child: Text(
+                                              g.title,
+                                              textAlign: TextAlign.center,
+                                              maxLines: 1,
+                                              softWrap: false,
+                                              style: AppTextStyles.body.copyWith(
+                                                color: AppColors.ink,
+                                                fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.medium,
+                                                height: 1.25,
+                                              ),
                                             ),
                                           ),
                                         ),
@@ -286,7 +293,7 @@ class _GoalsScreenState extends State<GoalsScreen> {
                               ),
                             ),
                           ),
-                        );
+                        ];
                       }).toList(),
                     ),
                   ),

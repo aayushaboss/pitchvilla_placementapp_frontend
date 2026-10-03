@@ -38,7 +38,9 @@ class DatePickerField extends StatelessWidget {
         onTap: disabled ? null : onTap,
         child: Container(
           height: 54,
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+          // lg, not xl: two of these sit side by side (Start / End date) and
+          // xl padding left ~36px for text, so "Start date" wrapped to two rows.
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
           decoration: BoxDecoration(
             color: AppColors.offWhite,
             borderRadius: BorderRadius.circular(999),
@@ -50,11 +52,18 @@ class DatePickerField extends StatelessWidget {
                 const SizedBox(width: AppSpacing.sm),
               ],
               Expanded(
-                child: Text(
-                  value ?? placeholder,
-                  style: value == null
-                      ? AppTextStyles.bodyLg.copyWith(fontSize: 16, color: AppColors.gray400, fontWeight: AppFontWeight.regular)
-                      : AppTextStyles.bodyLg.copyWith(fontSize: 16, color: AppColors.ink),
+                // Single line, shrinking slightly rather than wrapping.
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    value ?? placeholder,
+                    maxLines: 1,
+                    softWrap: false,
+                    style: value == null
+                        ? AppTextStyles.bodyLg.copyWith(fontSize: 16, color: AppColors.gray400, fontWeight: AppFontWeight.regular)
+                        : AppTextStyles.bodyLg.copyWith(fontSize: 16, color: AppColors.ink),
+                  ),
                 ),
               ),
               const Icon(Ionicons.chevron_down, size: 16, color: AppColors.gray400),
