@@ -404,6 +404,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.xl, AppSpacing.xl, AppSpacing.xxxl),
                       child: Column(
+                // Left-align labels and chip rows; the avatar block below is wrapped
+                // in its own Center. (A bare Column defaults to centre alignment,
+                // which centred every FieldLabel.)
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Center(
                     child: Column(

@@ -121,13 +121,11 @@ class _CourseCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     alignment: Alignment.center,
-                    // Violet, not blue — a calm in-system accent (the same
-                    // token the Interview badge uses) that sets a course
-                    // card apart from a job card at a glance without the
-                    // muddy dark-mustard-on-pale-yellow the old yellow mark
-                    // read as.
-                    decoration: BoxDecoration(color: AppColors.violetA15, borderRadius: BorderRadius.circular(AppRadius.md)),
-                    child: Icon(categoryIcons[course.category] ?? Ionicons.book_outline, size: 22, color: AppColors.violet),
+                    // Neutral circle + gray glyph, the same icon treatment as the
+                    // Notifications rows. The circle (vs a job card's square company
+                    // mark) is what tells a course apart from a job at a glance.
+                    decoration: const BoxDecoration(color: AppColors.offWhite, shape: BoxShape.circle),
+                    child: Icon(categoryIcons[course.category] ?? Ionicons.book_outline, size: 22, color: AppColors.gray500),
                   ),
                   const SizedBox(width: AppSpacing.md),
                   Expanded(

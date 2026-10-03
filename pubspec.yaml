@@ -95,6 +95,9 @@ flutter:
           weight: 900
 
 flutter_native_splash:
+  # The web build uses the in-app splash screen; the tool's web splash markup
+  # is never removed at runtime, so keep it off.
+  web: false
   color: "#FFFFFF"
   image: assets/images/splash-image.png
   android_12:

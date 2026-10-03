@@ -40,8 +40,8 @@ class PrepCourseCard extends StatelessWidget {
               width: 60,
               height: 60,
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: AppColors.offWhite, borderRadius: BorderRadius.circular(AppRadius.md)),
-              child: Icon(categoryIcons[course.category] ?? Ionicons.book_outline, size: 26, color: AppColors.ink),
+              decoration: const BoxDecoration(color: AppColors.offWhite, shape: BoxShape.circle),
+              child: Icon(categoryIcons[course.category] ?? Ionicons.book_outline, size: 26, color: AppColors.gray500),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(

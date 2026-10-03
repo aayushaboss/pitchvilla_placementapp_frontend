@@ -4,7 +4,7 @@
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
-    "theme_color": "#FFCC00",
+    "theme_color": "#FFFFFF",
     "description": "Pitchvilla - internships and jobs curated just for you.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,

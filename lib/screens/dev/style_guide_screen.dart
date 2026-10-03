@@ -53,7 +53,6 @@ class StyleGuideScreen extends StatelessWidget {
               _ColorSwatch('success', AppColors.success),
               _ColorSwatch('warning', AppColors.warning),
               _ColorSwatch('error', AppColors.error),
-              _ColorSwatch('violet', AppColors.violet),
               _ColorSwatch('border', AppColors.border, border: true),
               _ColorSwatch('focusRing', AppColors.focusRing),
             ],

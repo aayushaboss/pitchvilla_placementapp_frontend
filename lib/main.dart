@@ -8,6 +8,7 @@ import 'data/repositories.dart';
 import 'router.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
+import 'theme/colors.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,6 +52,10 @@ class _PitchvillaAppState extends State<PitchvillaApp> {
       ],
       child: MaterialApp.router(
         title: 'Pitchvilla',
+        // On web this becomes the page's <meta name="theme-color"> (the mobile
+        // browser toolbar / task-switcher colour). Without it Flutter falls back
+        // to the theme's primary colour, which is the brand yellow.
+        color: AppColors.white,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         scaffoldMessengerKey: _scaffoldMessengerKey,

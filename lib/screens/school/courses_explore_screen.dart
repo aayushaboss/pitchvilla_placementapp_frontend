@@ -10,8 +10,10 @@ import '../../models/user.dart';
 import '../../state/app_state.dart';
 import '../../theme/breakpoints.dart';
 import '../../theme/colors.dart';
+import '../../theme/shadows.dart';
 import '../../theme/spacing.dart';
 import '../../theme/text_styles.dart';
+import '../../utils/no_orphan.dart';
 import '../../utils/group_by_category.dart';
 import '../../utils/recent_course_searches_prefs_key.dart';
 import '../../utils/scroll_to_top_registry.dart';
@@ -27,6 +29,11 @@ import 'course_filter_screen.dart';
 const _maxRecentCourseSearches = 5;
 
 const _categories = ['Counseling', 'Technology', 'Design', 'Finance', 'Science', 'Placement'];
+
+// Shown in place of Recent searches until the browser has any history, so the
+// suggestion area is never empty. Every term matches a real course title or
+// category (the search matches either), so a tap always lands on results.
+const _popularSearches = ['Technology', 'Design', 'Finance', 'Interview', 'Resume', 'Data'];
 
 // aptitudeResults (the real source for "Recommended for you") is only ever
 // populated via the school-only /school/aptitude flow — for college this
@@ -64,6 +71,10 @@ class CoursesExploreScreen extends StatefulWidget {
 
 class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
   final _searchController = TextEditingController();
+  // Lets a typed search be saved to Recent searches when the user simply taps
+  // away - most people on a phone never press the keyboard's Done key, and
+  // history used to be saved only on that key.
+  final _searchFocus = FocusNode();
   final _scrollController = ScrollController();
   // This screen is mounted at branch 1 for school (Browse tab) and branch 3
   // for college (Courses tab) — see BrowseTabScreen/TabsScaffold, which pick
@@ -128,12 +139,16 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
       }
     });
     _loadRecentSearches();
+    _searchFocus.addListener(() {
+      if (!_searchFocus.hasFocus) _saveRecentSearch(_searchController.text);
+    });
   }
 
   @override
   void dispose() {
     if (_registeredBranchIndex != null) ScrollToTopRegistry.unregister(_registeredBranchIndex!);
     _searchController.dispose();
+    _searchFocus.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -157,11 +172,10 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
         Padding(
           padding: const EdgeInsets.only(top: AppSpacing.md),
           child: AutoCarousel(
-            height: 84,
-            // Static, non-interactive trust cards — the dots were purely
-            // decorative here (unlike Home's 2-card boost-tip carousel,
-            // where they're the only signal a second card exists).
-            showDots: false,
+            // Same size and cadence as Home's promo cards (college_feed_screen.dart)
+            // so these trust cards read as part of the same family.
+            height: 112,
+            interval: const Duration(seconds: 8),
             // "NEP 2020" (the National Education Policy) reads as K-12
             // curriculum framing — fine for a school-stage audience, but
             // this screen is shared with college/placement-stage students
@@ -170,34 +184,34 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
             cards: isSchool
                 ? const [
                     _CredibilityCard(
-                      icon: Ionicons.school_outline,
+                      icon: Ionicons.school,
                       title: 'NEP 2020 Aligned',
                       caption: 'Courses mapped to the National Education Policy 2020.',
                     ),
                     _CredibilityCard(
-                      icon: Ionicons.ribbon_outline,
+                      icon: Ionicons.ribbon,
                       title: 'Skill India Certified',
                       caption: "Content aligned with Skill India's competency framework.",
                     ),
                     _CredibilityCard(
-                      icon: Ionicons.shield_checkmark_outline,
+                      icon: Ionicons.shield_checkmark,
                       title: 'NSDC Approved',
                       caption: 'Backed by the National Skill Development Corporation.',
                     ),
                   ]
                 : const [
                     _CredibilityCard(
-                      icon: Ionicons.ribbon_outline,
+                      icon: Ionicons.ribbon,
                       title: 'Industry-recognized certification',
                       caption: 'Certificates recruiters actually look for.',
                     ),
                     _CredibilityCard(
-                      icon: Ionicons.shield_checkmark_outline,
+                      icon: Ionicons.shield_checkmark,
                       title: 'Skill India Certified',
                       caption: "Content aligned with Skill India's competency framework.",
                     ),
                     _CredibilityCard(
-                      icon: Ionicons.briefcase_outline,
+                      icon: Ionicons.briefcase,
                       title: 'Built for placement season',
                       caption: 'Interview, resume, and aptitude prep included.',
                     ),
@@ -211,6 +225,7 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
               Expanded(
                 child: PillInput(
                   controller: _searchController,
+                  focusNode: _searchFocus,
                   placeholder: 'Search courses',
                   onChanged: (_) => setState(() {}),
                   onSubmitted: _saveRecentSearch,
@@ -274,7 +289,11 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
       title: c.title,
       meta: [c.duration, '${c.modules} modules'],
       linkLabel: 'View syllabus',
-      onTap: () => context.push('/course/${c.id}'),
+      onTap: () {
+        // Opening a result is the clearest signal the search was useful.
+        _saveRecentSearch(_searchController.text);
+        context.push('/course/${c.id}');
+      },
     );
   }
 
@@ -476,6 +495,19 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
               children: _recentSearches.map((s) => _RecentSearchChip(label: s, onTap: () => _selectSearch(s))).toList(),
             ),
           ),
+        ] else ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.md),
+            child: Text('Popular searches', style: AppTextStyles.body.copyWith(color: AppColors.ink, fontWeight: AppFontWeight.bold, fontSize: 16)),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, AppSpacing.xl),
+            child: Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: _popularSearches.map((s) => _RecentSearchChip(label: s, onTap: () => _selectSearch(s))).toList(),
+            ),
+          ),
         ],
       ];
       if (isTablet) {
@@ -542,11 +574,11 @@ class _RecentSearchChip extends StatelessWidget {
   }
 }
 
-/// One trust-badge card in the credibility carousel above the search bar —
-/// same tinted-box shell language as the nudge cards on Home
-/// (AppColors.offWhite, AppRadius.lg), but with a plain leading icon circle
-/// instead of a trailing nav button since there's nowhere for a claim like
-/// "NEP 2020 Aligned" to navigate to.
+/// One trust-badge card in the credibility carousel above the search bar.
+/// Deliberately the same design as Home's promo cards ("Get recruiters to
+/// notice you"): solid brand fill, bold ink title, softer ink caption, and a
+/// large filled glyph on the right. Not tappable — a claim like "NEP 2020
+/// Aligned" has nowhere to navigate.
 class _CredibilityCard extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -556,40 +588,35 @@ class _CredibilityCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // md, not lg — this card sits in an AutoCarousel with a fixed
-      // height: 84 (courses_explore_screen.dart); at lg's current 24 (up
-      // from an old 14, per the 8pt-grid rebase), padding alone consumed
-      // 48 of that 84 and left less than the card's own content (a 40px
-      // icon, or a 2-line title+caption column reaching ~51px) actually
-      // needs — a real overflow, not just a look-and-feel call.
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(color: AppColors.offWhite, borderRadius: BorderRadius.circular(AppRadius.lg)),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+      alignment: Alignment.centerLeft,
+      decoration: BoxDecoration(color: AppColors.brand, borderRadius: BorderRadius.circular(AppRadius.lg), boxShadow: AppShadows.card),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(color: AppColors.white, shape: BoxShape.circle),
-            child: Icon(icon, size: 20, color: AppColors.gray500),
-          ),
-          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(title, style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 12, fontWeight: AppFontWeight.medium)),
-                const SizedBox(height: AppSpacing.xs),
                 Text(
-                  caption,
+                  noOrphan(title),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12, height: 1.3),
+                  style: AppTextStyles.h3.copyWith(color: AppColors.ink, fontSize: 16, fontWeight: AppFontWeight.bold),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.xs),
+                  child: Text(
+                    noOrphan(caption),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.caption.copyWith(color: AppColors.inkA70, fontSize: 12, height: 1.3),
+                  ),
                 ),
               ],
             ),
           ),
+          Icon(icon, size: 32, color: AppColors.ink),
         ],
       ),
     );

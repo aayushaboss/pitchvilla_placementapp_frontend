@@ -20,16 +20,16 @@ class StatusBadge extends StatelessWidget {
   // Status badges are pure display, so they are soft tinted pills — never the
   // solid-fill look PillButton uses for a real button. In Review/Offer use the
   // *Dark variants, not the plain warning/success tokens: those read fine as
-  // icon fills but fail contrast as small text on their own tint. Interview
-  // has its own violet accent so the single most important status jump in a
-  // list of cards is distinguishable by colour, not just by the label.
-  // "Applied" is the one outlined badge: white with a thin brand stroke (the
-  // app's only use of yellow in a status), so it stays distinct from the
-  // gray "Rejected" without adding a yellow wash.
+  // icon fills but fail contrast as small text on their own tint.
+  // Two statuses are outlined pills (white fill + thin stroke) instead of
+  // tinted ones: Applied (brand-yellow stroke, the app's only yellow in a
+  // status) and Interview (green stroke - the step before the green Offer
+  // tint). That keeps all five distinguishable without adding another hue or
+  // a yellow wash.
   static const Map<String, (Color, Color)> _statusColors = {
     'Applied': (AppColors.white, AppColors.ink),
     'In Review': (AppColors.warningA15, AppColors.warningDark),
-    'Interview': (AppColors.violetA15, AppColors.violet),
+    'Interview': (AppColors.white, AppColors.successDark),
     'Offer': (AppColors.successA10, AppColors.successDark),
     'Rejected': (AppColors.gray500A15, AppColors.gray500),
   };
@@ -37,13 +37,18 @@ class StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = _statusColors[status] ?? _statusColors['Applied']!;
-    final isApplied = _statusColors[status] == null || status == 'Applied';
+    // Unknown statuses fall back to the Applied look.
+    final Color? stroke = switch (status) {
+      'Interview' => AppColors.success,
+      'Applied' => AppColors.brand,
+      _ => _statusColors[status] == null ? AppColors.brand : null,
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        border: isApplied ? Border.all(color: AppColors.brand, width: 1.5) : null,
+        border: stroke == null ? null : Border.all(color: stroke, width: 1.5),
       ),
       child: Text(
         applicationStatusLabel(status),

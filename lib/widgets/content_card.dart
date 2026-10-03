@@ -111,11 +111,10 @@ class _ContentCardState extends State<ContentCard> {
                         width: 44,
                         height: 44,
                         alignment: Alignment.center,
-                        // Violet mark — matches the course carousel card, so
-                        // a course reads distinct from a (blue-marked) job
-                        // card wherever it shows up.
-                        decoration: BoxDecoration(color: AppColors.violetA15, borderRadius: BorderRadius.circular(AppRadius.md)),
-                        child: Icon(widget.icon ?? Ionicons.book_outline, size: 22, color: AppColors.violet),
+                        // Neutral circle + gray glyph, matching the course carousel
+                        // card and the Notifications rows.
+                        decoration: const BoxDecoration(color: AppColors.offWhite, shape: BoxShape.circle),
+                        child: Icon(widget.icon ?? Ionicons.book_outline, size: 22, color: AppColors.gray500),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(

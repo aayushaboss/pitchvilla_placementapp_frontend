@@ -7,11 +7,11 @@ import '../theme/text_styles.dart';
 import '../utils/career_dna_trait_summary.dart';
 import 'bipolar_trait_bar.dart';
 
-/// Brand yellow and violet only — never green/warning/error. Green in particular
+/// Brand yellow and its warm dark neutral only — never green/warning/error. Green in particular
 /// (tried first) read as tied to the app's "success" status color
 /// elsewhere, which is misleading here since every bar is a
 /// positive-vs-positive framing, not a pass/fail signal.
-const _barAccents = [AppColors.brand, AppColors.violet, AppColors.brand];
+const _barAccents = [AppColors.brand, AppColors.brandDeep, AppColors.brand];
 
 /// The compact, above-the-fold result summary shown at the top of a
 /// completed level's report (and the final synthesis) — a title, 2-3
