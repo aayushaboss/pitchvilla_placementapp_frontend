@@ -437,7 +437,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                           child: Text('Tap to upload from camera or gallery', style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12)),
                         ),
                         Padding(
-                          padding: const EdgeInsets.only(top: AppSpacing.xs),
+                          padding: const EdgeInsets.only(top: AppSpacing.md),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -496,10 +496,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   else ...[
                     const FieldLabel('Full name', tight: true),
                     PillInput(controller: _nameController, placeholder: 'Your name', icon: Ionicons.person_outline, onChanged: (_) => setState(() {})),
-                    const FieldLabel('City'),
+                    const FieldLabel('City', tight: true),
                     AutocompleteField(value: _city, placeholder: 'e.g. Mumbai', icon: Ionicons.location_outline, options: mockCities, onChanged: (v) => setState(() => _city = v)),
                   ],
-                  const FieldLabel('Phone number'),
+                  const FieldLabel('Phone number', tight: true),
                   PillInput(
                     controller: _phoneController,
                     placeholder: '9876543210',
@@ -536,11 +536,11 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         if (isTablet)
                           DesktopFieldRow(
                             left: _fieldGroup(
-                              const FieldLabel('Which institution did you attend?'),
+                              const FieldLabel('Which institution did you attend?', tight: true),
                               AutocompleteField(value: _college, placeholder: 'e.g. BITS Goa', icon: Ionicons.business_outline, options: mockColleges, onChanged: (v) => setState(() => _college = v)),
                             ),
                             right: _fieldGroup(
-                              const FieldLabel('What did you specialize in?'),
+                              const FieldLabel('What did you specialize in?', tight: true),
                               AutocompleteField(
                                 value: _course,
                                 placeholder: 'e.g. B.Tech, B.Com, Diploma in Mechanical, MBA…',
@@ -551,9 +551,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                             ),
                           )
                         else ...[
-                          const FieldLabel('Which institution did you attend?'),
+                          const FieldLabel('Which institution did you attend?', tight: true),
                           AutocompleteField(value: _college, placeholder: 'e.g. BITS Goa', icon: Ionicons.business_outline, options: mockColleges, onChanged: (v) => setState(() => _college = v)),
-                          const FieldLabel('What did you specialize in?'),
+                          const FieldLabel('What did you specialize in?', tight: true),
                           AutocompleteField(
                             value: _course,
                             placeholder: 'e.g. B.Tech, B.Com, Diploma in Mechanical, MBA…',
@@ -568,22 +568,22 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                       if (isTablet)
                         DesktopFieldRow(
                           left: _fieldGroup(
-                            const FieldLabel('College / University'),
+                            const FieldLabel('College / University', tight: true),
                             AutocompleteField(value: _college, placeholder: 'e.g. BITS Goa', icon: Ionicons.business_outline, options: mockColleges, onChanged: (v) => setState(() => _college = v)),
                           ),
                           right: _fieldGroup(
-                            const FieldLabel('Course / Degree'),
+                            const FieldLabel('Course / Degree', tight: true),
                             AutocompleteField(value: _course, placeholder: 'e.g. B.Tech, MBA, B.Sc…', icon: Ionicons.book_outline, options: mockCourses, onChanged: (v) => setState(() => _course = v)),
                           ),
                         )
                       else ...[
-                        const FieldLabel('College / University'),
+                        const FieldLabel('College / University', tight: true),
                         AutocompleteField(value: _college, placeholder: 'e.g. BITS Goa', icon: Ionicons.business_outline, options: mockColleges, onChanged: (v) => setState(() => _college = v)),
-                        const FieldLabel('Course / Degree'),
+                        const FieldLabel('Course / Degree', tight: true),
                         AutocompleteField(value: _course, placeholder: 'e.g. B.Tech, MBA, B.Sc…', icon: Ionicons.book_outline, options: mockCourses, onChanged: (v) => setState(() => _course = v)),
                       ],
                       if (user.segment != Segment.pg) ...[
-                        const FieldLabel('Semester'),
+                        const FieldLabel('Semester', tight: true),
                         DatePickerField(
                           value: _semester.isEmpty ? null : _semester,
                           placeholder: 'Select semester',
@@ -592,7 +592,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                         ),
                       ],
                       if (user.segment == Segment.pg) _priorExperienceField('Work experience before this program'),
-                      const FieldLabel('Field of study'),
+                      const FieldLabel('Field of study', tight: true),
                       AutocompleteField(value: _fieldOfStudy, placeholder: 'e.g. Computer Science', icon: Ionicons.school_outline, options: mockFieldsOfStudy, onChanged: (v) => setState(() => _fieldOfStudy = v)),
                     ],
                     const FieldLabel('Looking for'),

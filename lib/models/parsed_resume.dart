@@ -175,6 +175,11 @@ class ParsedResume {
   /// one instead of (or alongside) a link. Nullable.
   final String? portfolioFileName;
 
+  /// True while the guided builder has only autosaved a partial resume (the
+  /// user left, or is still mid-way). A draft restores into the builder but
+  /// never counts as a finished resume — see User.hasResume.
+  final bool isDraft;
+
   const ParsedResume({
     required this.name,
     this.headline,
@@ -190,6 +195,7 @@ class ParsedResume {
     this.certifications = const [],
     this.portfolioLink,
     this.portfolioFileName,
+    this.isDraft = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -207,6 +213,7 @@ class ParsedResume {
         'certifications': certifications.map((c) => c.toJson()).toList(),
         'portfolioLink': portfolioLink,
         'portfolioFileName': portfolioFileName,
+        'isDraft': isDraft,
       };
 
   factory ParsedResume.fromJson(Map<String, dynamic> json) => ParsedResume(
@@ -232,5 +239,6 @@ class ParsedResume {
             .toList(),
         portfolioLink: json['portfolioLink'] as String?,
         portfolioFileName: json['portfolioFileName'] as String?,
+        isDraft: json['isDraft'] as bool? ?? false,
       );
 }

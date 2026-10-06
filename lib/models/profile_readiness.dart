@@ -57,6 +57,8 @@ extension ProfileReadiness on User {
   bool get hasResume {
     final r = resume;
     if (r == null) return false;
+    // A half-built resume autosaved by the guided builder is not a resume yet.
+    if (r.isDraft) return false;
     // Deliberately not `r.name.isNotEmpty` on its own — the quiz's own
     // autosave (resume_builder_quiz_screen.dart's _saveDraft) always sets
     // `name` from the profile the instant *any* optional field is touched

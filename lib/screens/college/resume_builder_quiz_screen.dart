@@ -416,8 +416,25 @@ class _ResumeBuilderQuizScreenState extends State<ResumeBuilderQuizScreen> {
     super.dispose();
   }
 
+  // True from the moment a step change starts until a moment after it lands.
+  // Every step's footer button sits in the same spot, so a double-tap or a late
+  // tap on a laggy phone used to land on the *next* step's button and skip it
+  // (the experience and certification gates, "Skip for now", ...).
+  bool _navigating = false;
+
   Future<void> _goTo(int page) async {
-    if (page == _index || page < 0 || page >= _totalSteps) return;
+    if (_navigating || page == _index || page < 0 || page >= _totalSteps) return;
+    _navigating = true;
+    try {
+      await _goToUnguarded(page);
+      // Let queued taps from the old screen drain before the new one listens.
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    } finally {
+      _navigating = false;
+    }
+  }
+
+  Future<void> _goToUnguarded(int page) async {
     // Leaving a step (Continue, Skip, or back) while an entry on that step
     // is mid-edit used to silently drop it — it stays pulled out of its
     // list forever since nothing re-inserts it. Auto-cancelling here (same
@@ -438,7 +455,11 @@ class _ResumeBuilderQuizScreenState extends State<ResumeBuilderQuizScreen> {
     unawaited(_saveDraft());
   }
 
-  ParsedResume _resumeFromState() => ParsedResume(
+  // A resume built from scratch stays a draft until the final step saves it;
+  // editing one that was already finished must not demote it back to a draft.
+  bool _isStillDraft(User current) => current.resume == null || current.resume!.isDraft;
+
+  ParsedResume _resumeFromState({bool draft = false}) => ParsedResume(
         name: _user?.name ?? '',
         headline: _headlineController.text.trim().isEmpty ? null : _headlineController.text.trim(),
         phone: _phoneController.text.trim().isEmpty ? null : _phoneController.text.trim(),
@@ -451,6 +472,7 @@ class _ResumeBuilderQuizScreenState extends State<ResumeBuilderQuizScreen> {
         summary: _summaryController.text.trim().isEmpty ? null : _summaryController.text.trim(),
         workExperience: _workExperience,
         certifications: _certifications,
+        isDraft: draft,
       );
 
   /// Whether there's genuinely something from *this* quiz worth saving —
@@ -472,7 +494,7 @@ class _ResumeBuilderQuizScreenState extends State<ResumeBuilderQuizScreen> {
   Future<void> _saveDraft() async {
     if (!mounted || !_hasDraftContent) return;
     try {
-      await context.read<AppState>().updateProfile((current) => current.copyWith(resume: _resumeFromState(), languages: _languages));
+      await context.read<AppState>().updateProfile((current) => current.copyWith(resume: _resumeFromState(draft: _isStillDraft(current)), languages: _languages));
     } catch (e) {
       // Background autosave — the guard above keeps an oversized image
       // path from ever reaching here, so a failure at this point is
@@ -737,7 +759,7 @@ class _ResumeBuilderQuizScreenState extends State<ResumeBuilderQuizScreen> {
     // do" cancels this.
     if (value == false) {
       Future.delayed(const Duration(milliseconds: 220), () {
-        if (mounted && _hasWorkExperience == false) _goTo(3);
+        if (mounted && _hasWorkExperience == false && _index == 2) _goTo(3);
       });
     }
   }
@@ -900,7 +922,7 @@ class _ResumeBuilderQuizScreenState extends State<ResumeBuilderQuizScreen> {
       // Re-checks _hasCertifications so a fast follow-up tap on "Yes, I do"
       // cancels this.
       Future.delayed(const Duration(milliseconds: 220), () {
-        if (mounted && _hasCertifications == false) _goTo(4);
+        if (mounted && _hasCertifications == false && _index == 3) _goTo(4);
       });
     }
   }
