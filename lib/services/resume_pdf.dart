@@ -91,6 +91,16 @@ Future<Uint8List> buildResumePdf(User user) async {
           ...resume!.projects.map((p) => _projectEntry(p, bold, regular)),
           pw.SizedBox(height: 16),
         ],
+        if ((resume?.achievements ?? const []).isNotEmpty) ...[
+          _sectionHeader('Achievements', bold),
+          ...resume!.achievements.map(
+            (a) => pw.Padding(
+              padding: const pw.EdgeInsets.only(bottom: 3),
+              child: pw.Text('- $a', style: pw.TextStyle(font: regular, fontSize: 10, color: _ink)),
+            ),
+          ),
+          pw.SizedBox(height: 16),
+        ],
         if ((user.languages ?? const []).isNotEmpty) ...[
           _sectionHeader('Languages', bold),
           pw.Text(user.languages!.map((l) => l.name).join(', '), style: pw.TextStyle(font: regular, fontSize: 10, color: _ink)),

@@ -5,10 +5,12 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../config/resume_flow.dart';
 import '../../mockData/mock_opportunities.dart';
 import '../../mockData/mock_resume.dart';
 import '../../models/parsed_resume.dart';
 import '../../models/profile_readiness.dart';
+import '../../nav.dart';
 import '../../services/apply_flow.dart';
 import '../../state/app_state.dart';
 import '../../theme/breakpoints.dart';
@@ -192,6 +194,19 @@ class _ResumeScreenState extends State<ResumeScreen> {
       await Future.delayed(const Duration(milliseconds: 700));
       if (!mounted) return;
       final d = mockParsedResume;
+      if (kResumeFlow == ResumeFlow.chat) {
+        // Flow 2: the Resume Helper reads what was found, confirms it and
+        // asks only about what is missing, instead of the review stage.
+        final parsed = ParsedResume(
+          name: (profileName != null && profileName.trim().isNotEmpty) ? profileName : d.name,
+          education: d.education,
+          skills: d.skills,
+          projects: d.projects,
+          links: d.links,
+        );
+        context.push(resumeBuildLocation(applyFor: widget.applyForOpportunityId), extra: parsed);
+        return;
+      }
       setState(() {
         _nameController.text = (profileName != null && profileName.trim().isNotEmpty) ? profileName : d.name;
         _skills = List.of(d.skills);
@@ -206,7 +221,7 @@ class _ResumeScreenState extends State<ResumeScreen> {
 
   void _manual() {
     final applyFor = widget.applyForOpportunityId;
-    context.push(applyFor == null ? '/college/resume/build' : '/college/resume/build?applyFor=$applyFor');
+    context.push(resumeBuildLocation(applyFor: applyFor));
   }
 
   bool get _postOnboarding => context.read<AppState>().user?.onboardingComplete == true;
@@ -586,7 +601,7 @@ class _ResumeScreenState extends State<ResumeScreen> {
                             title: 'No resume saved yet',
                             subtitle: 'Build one from scratch or upload an existing PDF.',
                             buttonLabel: 'Build my resume',
-                            onButtonTap: () => context.push('/college/resume/build'),
+                            onButtonTap: () => context.push(resumeBuildLocation()),
                           ),
                         )
                       : Padding(

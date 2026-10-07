@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../data/repositories.dart';
+import '../nav.dart';
 import '../models/opportunity.dart';
 import '../models/opportunity_match.dart';
 import '../models/profile_readiness.dart';
@@ -190,7 +191,7 @@ void _showApplyGateSheet(BuildContext context, User? user, Opportunity opportuni
               child: GestureDetector(
                 onTap: () {
                   Navigator.of(sheetContext).pop();
-                  context.push('/college/resume/build?applyFor=${opportunity.id}');
+                  context.push(resumeBuildLocation(applyFor: opportunity.id));
                 },
                 child: Text(
                   "Don't have one? Build it here",

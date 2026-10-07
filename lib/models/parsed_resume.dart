@@ -180,6 +180,10 @@ class ParsedResume {
   /// never counts as a finished resume — see User.hasResume.
   final bool isDraft;
 
+  /// Awards, achievements and activities, one line each. Empty for older
+  /// saved resumes.
+  final List<String> achievements;
+
   const ParsedResume({
     required this.name,
     this.headline,
@@ -196,6 +200,7 @@ class ParsedResume {
     this.portfolioLink,
     this.portfolioFileName,
     this.isDraft = false,
+    this.achievements = const [],
   });
 
   Map<String, dynamic> toJson() => {
@@ -214,6 +219,7 @@ class ParsedResume {
         'portfolioLink': portfolioLink,
         'portfolioFileName': portfolioFileName,
         'isDraft': isDraft,
+        'achievements': achievements,
       };
 
   factory ParsedResume.fromJson(Map<String, dynamic> json) => ParsedResume(
@@ -240,5 +246,6 @@ class ParsedResume {
         portfolioLink: json['portfolioLink'] as String?,
         portfolioFileName: json['portfolioFileName'] as String?,
         isDraft: json['isDraft'] as bool? ?? false,
+        achievements: ((json['achievements'] as List?) ?? const []).cast<String>(),
       );
 }

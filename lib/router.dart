@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'models/career_dna.dart';
+import 'models/parsed_resume.dart';
 import 'nav.dart';
 import 'screens/dev/style_guide_screen.dart';
 import 'screens/auth/login_screen.dart';
@@ -20,6 +21,7 @@ import 'screens/college/opportunity_filter_screen.dart';
 import 'screens/college/opportunity_list_screen.dart';
 import 'screens/college/recently_deleted_applications_screen.dart';
 import 'screens/college/resume_builder_quiz_screen.dart';
+import 'screens/college/resume_chat_screen.dart';
 import 'screens/college/resume_screen.dart';
 import 'screens/onboarding/landing_screen.dart';
 import 'screens/onboarding/micro_profile_screen.dart';
@@ -189,6 +191,16 @@ GoRouter buildRouter(AppState appState, GlobalKey<ScaffoldMessengerState> scaffo
           key: ValueKey('resume-build-${state.uri.queryParameters['step'] ?? '0'}'),
           applyForOpportunityId: state.uri.queryParameters['applyFor'],
           initialStep: int.tryParse(state.uri.queryParameters['step'] ?? '') ?? 0,
+        ),
+      ),
+      // Resume flow 2 (chat). Flow 1 is /college/resume/build above; which one the
+      // app opens is decided by kResumeFlow via resumeBuildLocation().
+      GoRoute(
+        path: '/college/resume/chat',
+        builder: (context, state) => ResumeChatScreen(
+          key: ValueKey('resume-chat-${state.uri.queryParameters['applyFor'] ?? ''}'),
+          applyForOpportunityId: state.uri.queryParameters['applyFor'],
+          uploaded: state.extra is ParsedResume ? state.extra as ParsedResume : null,
         ),
       ),
       GoRoute(path: '/college/goals', builder: (context, state) => const GoalsScreen()),

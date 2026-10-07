@@ -1,3 +1,4 @@
+import 'config/resume_flow.dart';
 import 'models/user.dart';
 
 /// Single source of truth for where a user should land based on onboarding
@@ -23,4 +24,12 @@ String routeForUser(User? user) {
     return '/tabs';
   }
   return '/tabs';
+}
+
+/// Where "build my resume from scratch" goes. Follows [kResumeFlow]: the chat
+/// Resume Helper (flow 2) or the guided 7-step quiz (flow 1). Per-section
+/// edits (`/college/resume/build?step=N`) always use the quiz.
+String resumeBuildLocation({String? applyFor}) {
+  final base = kResumeFlow == ResumeFlow.chat ? '/college/resume/chat' : '/college/resume/build';
+  return applyFor == null ? base : '$base?applyFor=$applyFor';
 }
