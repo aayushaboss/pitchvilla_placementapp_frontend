@@ -5,7 +5,7 @@
          release build unless declared here explicitly. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <application
-        android:label="Pitchvilla"
+        android:label="Jobsvilla"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

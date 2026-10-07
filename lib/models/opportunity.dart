@@ -36,6 +36,30 @@ class Opportunity {
   final List<String> screeningQuestions;
   final List<List<String>> screeningQuestionOptions;
 
+  // ---- Straight from the job spreadsheet (empty/null when a job has none) ----
+
+  /// Startup ID, e.g. "ST001". One startup has several jobs.
+  final String startupId;
+
+  /// Industry/sector of the startup, e.g. "FinTech", "D2C / FoodTech".
+  final String sector;
+
+  /// Experience asked for, e.g. "0 Years", "0–1 Year", "3–5 Years".
+  final String experience;
+
+  /// Department as written in the sheet (same value as [category]).
+  final String department;
+
+  /// Salary range text exactly as given, e.g. "₹3.5–₹6.8 LPA". Internships
+  /// carry an "LPA equivalent" here as well as a monthly [internStipend].
+  final String salaryRange;
+
+  /// Monthly stipend text, e.g. "₹17,000–₹25,000/month". Only internships have it.
+  final String? internStipend;
+
+  /// "Demo Opening" column: true when the opening is flagged as a demo.
+  final bool demoOpening;
+
   const Opportunity({
     required this.id,
     required this.title,
@@ -55,6 +79,13 @@ class Opportunity {
     this.applicantCount = 0,
     this.screeningQuestions = const [],
     this.screeningQuestionOptions = const [],
+    this.startupId = '',
+    this.sector = '',
+    this.experience = '',
+    this.department = '',
+    this.salaryRange = '',
+    this.internStipend,
+    this.demoOpening = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -76,6 +107,13 @@ class Opportunity {
         'applicantCount': applicantCount,
         'screeningQuestions': screeningQuestions,
         'screeningQuestionOptions': screeningQuestionOptions,
+        'startupId': startupId,
+        'sector': sector,
+        'experience': experience,
+        'department': department,
+        'salaryRange': salaryRange,
+        'internStipend': internStipend,
+        'demoOpening': demoOpening,
       };
 
   factory Opportunity.fromJson(Map<String, dynamic> json) => Opportunity(
@@ -100,5 +138,12 @@ class Opportunity {
                 ?.map((o) => (o as List).cast<String>())
                 .toList() ??
             const [],
+        startupId: json['startupId'] as String? ?? '',
+        sector: json['sector'] as String? ?? '',
+        experience: json['experience'] as String? ?? '',
+        department: json['department'] as String? ?? '',
+        salaryRange: json['salaryRange'] as String? ?? '',
+        internStipend: json['internStipend'] as String?,
+        demoOpening: json['demoOpening'] as bool? ?? false,
       );
 }

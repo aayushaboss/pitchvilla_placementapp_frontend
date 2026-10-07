@@ -22,8 +22,8 @@ class OfflineVenue {
 /// not a multi-location backend, so a small constant is the right amount
 /// of "data model" for it. Both kinds share the same building for now.
 const mockOfflineVenues = {
-  'placement': OfflineVenue(name: 'Pitchvilla Careers Office', address: '3rd Floor, Baner Road, Pune', city: 'Pune'),
-  'counseling': OfflineVenue(name: 'Pitchvilla Careers Office', address: '3rd Floor, Baner Road, Pune', city: 'Pune'),
+  'placement': OfflineVenue(name: 'Jobsvilla Careers Office', address: '3rd Floor, Baner Road, Pune', city: 'Pune'),
+  'counseling': OfflineVenue(name: 'Jobsvilla Careers Office', address: '3rd Floor, Baner Road, Pune', city: 'Pune'),
 };
 
 // Deliberately empty — this used to seed a fake "Mock Interview" booking so

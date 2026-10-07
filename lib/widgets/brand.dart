@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../theme/text_styles.dart';
 
-/// Pitchvilla's mark: a solid dot. Yellow on white pages; white on a solid
+/// Jobsvilla's mark: a solid dot. Yellow on white pages; white on a solid
 /// `AppColors.brand` page, where a yellow dot would disappear.
 class BrandDot extends StatelessWidget {
   final double size;
@@ -21,7 +21,7 @@ class BrandDot extends StatelessWidget {
   }
 }
 
-/// Wordmark: the dot followed by lowercase "pitchvilla". Defaults suit a
+/// Wordmark: the dot followed by lowercase "jobsvilla". Defaults suit a
 /// white page; on a `brand` page pass `dot: AppColors.white`.
 class Wordmark extends StatelessWidget {
   final Color color;
@@ -43,7 +43,7 @@ class Wordmark extends StatelessWidget {
         BrandDot(size: size * 0.55, color: dot),
         SizedBox(width: size * 0.3),
         Text(
-          'pitchvilla',
+          'jobsvilla',
           style: TextStyle(
             fontFamily: kFontFamily,
             fontWeight: AppFontWeight.semibold,

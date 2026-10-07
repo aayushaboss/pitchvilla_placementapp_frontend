@@ -9,6 +9,10 @@ class Course {
   final String image;
   final String summary;
 
+  /// Duration in months from the course spreadsheet (e.g. 3.5 for "3–4
+  /// Months"). Drives the duration filter; [duration] stays the text as given.
+  final double months;
+
   const Course({
     required this.id,
     required this.title,
@@ -18,6 +22,7 @@ class Course {
     required this.modules,
     required this.image,
     required this.summary,
+    this.months = 0,
   });
 
   Map<String, dynamic> toJson() => {
@@ -29,6 +34,7 @@ class Course {
         'modules': modules,
         'image': image,
         'summary': summary,
+        'months': months,
       };
 
   factory Course.fromJson(Map<String, dynamic> json) => Course(
@@ -40,6 +46,7 @@ class Course {
         modules: json['modules'] as int,
         image: json['image'] as String,
         summary: json['summary'] as String,
+        months: (json['months'] as num?)?.toDouble() ?? 0,
       );
 }
 

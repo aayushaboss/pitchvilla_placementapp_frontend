@@ -16,6 +16,7 @@ import '../../theme/text_styles.dart';
 import '../../widgets/async_value_view.dart';
 import '../../widgets/back_chevron.dart';
 import '../../widgets/empty_state.dart';
+import '../../widgets/opportunity_meta.dart';
 import '../../widgets/opportunity_row.dart';
 import '../../widgets/responsive_body.dart';
 
@@ -135,7 +136,8 @@ class _OpportunityListScreenState extends State<OpportunityListScreen> {
                               tag: o.type,
                               title: o.title,
                               subtitle: o.company,
-                              meta: [o.location, o.stipend, o.duration],
+                              meta: opportunityMeta(o),
+                              extraMeta: opportunityExtraMeta(o),
                               matchLabel: o.matchLabelFor(user),
                               deadlineLabel: o.deadlineLabel,
                               deadlineUrgent: o.deadlineIsUrgent,

@@ -73,7 +73,7 @@ class ResumeChatContext {
   /// [existing] is an unfinished chat/quiz draft ("welcome back").
   final bool existingIsDraft;
 
-  /// Certificates earned in Pitchvilla courses — added to the resume
+  /// Certificates earned in Jobsvilla courses — added to the resume
   /// automatically, never asked about. Empty today: the app does not track
   /// course completions yet.
   final List<ResumeCertification> earnedCertificates;

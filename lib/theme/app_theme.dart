@@ -92,8 +92,17 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
       ),
       tooltipTheme: TooltipThemeData(
-        decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(AppRadius.sm)),
-        textStyle: AppTextStyles.caption.copyWith(color: AppColors.white),
+        decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(AppRadius.md)),
+        textStyle: AppTextStyles.caption.copyWith(color: AppColors.white, fontSize: 13, height: 1.4),
+        // Tap-triggered tooltips used to vanish after ~1.5s: too quick to read a
+        // two-line explanation. Stay up long enough to read, and still dismiss
+        // on a tap anywhere else.
+        showDuration: const Duration(seconds: 8),
+        exitDuration: const Duration(milliseconds: 300),
+        // Breathing room inside the bubble and from the screen edges (the text
+        // used to touch the edges of the dark bar and the screen).
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md - 4),
+        margin: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
       ),
       sliderTheme: const SliderThemeData(
         activeTrackColor: AppColors.brand,

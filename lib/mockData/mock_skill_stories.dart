@@ -53,7 +53,7 @@ final List<SkillStory> mockSkillStories = [
         prompt: 'Best subject line for a job application email?',
         options: [
           StoryOption(label: '"hi"'),
-          StoryOption(label: 'Application for Frontend Developer Intern — Aayusha Sharma', isBestPractice: true),
+          StoryOption(label: 'Application for Digital Marketing Intern — Aayusha Sharma', isBestPractice: true),
           StoryOption(label: 'URGENT!!! PLEASE READ'),
         ],
       ),

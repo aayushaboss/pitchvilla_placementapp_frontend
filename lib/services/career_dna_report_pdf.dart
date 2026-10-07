@@ -42,7 +42,7 @@ Future<Uint8List> buildCareerDnaReportPdf(User user) async {
       build: (context) => [
         pw.Text('${(user.name?.trim().isNotEmpty ?? false) ? user.name : 'Your'} Career Quiz Report', style: pw.TextStyle(font: extrabold, fontSize: 20, color: _ink)),
         pw.SizedBox(height: 2),
-        pw.Text('Pitchvilla Career Quiz', style: pw.TextStyle(font: medium, fontSize: 11, color: _ink)),
+        pw.Text('Jobsvilla Career Quiz', style: pw.TextStyle(font: medium, fontSize: 11, color: _ink)),
         pw.SizedBox(height: 18),
         if (profile.level1 != null) ..._level1Section(firstName, profile.level1!, fonts),
         if (profile.level2 != null) ..._level2Section(firstName, profile.level2!, fonts),
@@ -95,7 +95,7 @@ Future<Uint8List> buildCareerDnaLevelReportPdf(User user, int level) async {
           style: pw.TextStyle(font: extrabold, fontSize: 20, color: _ink),
         ),
         pw.SizedBox(height: 2),
-        pw.Text('Pitchvilla Career Quiz', style: pw.TextStyle(font: medium, fontSize: 11, color: _ink)),
+        pw.Text('Jobsvilla Career Quiz', style: pw.TextStyle(font: medium, fontSize: 11, color: _ink)),
         pw.SizedBox(height: 18),
         ...section,
       ],

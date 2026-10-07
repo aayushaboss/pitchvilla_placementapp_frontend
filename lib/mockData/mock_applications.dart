@@ -28,7 +28,7 @@ List<Application> _applications = _seedApplications();
 List<Application> _seedApplications() {
   final apps = <Application>[];
 
-  final interviewOpp = getOpportunityById('opp-frontend-intern');
+  final interviewOpp = getOpportunityById('JOB0011');
   if (interviewOpp != null) {
     apps.add(Application(
       id: 'app-seed-interview',
@@ -55,14 +55,14 @@ List<Application> _seedApplications() {
         ),
         ApplicationMessage(
           id: 'm3',
-          text: "You're shortlisted! 🎉 Here are your interview details for Microsoft:",
+          text: "You're shortlisted! 🎉 Here are your interview details for ${interviewOpp.company}:",
           at: _daysAgo(1),
-          interview: const InterviewDetails(
-            round: 'Technical Round 1',
+          interview: InterviewDetails(
+            round: 'Interview Round 1',
             dateLabel: 'Mon, 18 Aug',
             timeLabel: '1:00 PM',
             mode: 'Offline',
-            location: 'Microsoft, 4th Floor, Prestige Tech Park, Bengaluru',
+            location: '${interviewOpp.company} office, ${interviewOpp.location}',
           ),
         ),
         ApplicationMessage(
@@ -74,7 +74,7 @@ List<Application> _seedApplications() {
     ));
   }
 
-  final offerOpp = getOpportunityById('opp-uiux-intern');
+  final offerOpp = getOpportunityById('JOB0002');
   if (offerOpp != null) {
     apps.add(Application(
       id: 'app-seed-offer',
@@ -107,14 +107,14 @@ List<Application> _seedApplications() {
         ),
         ApplicationMessage(
           id: 'm4',
-          text: "🎉 Congratulations! Adobe would like to offer you the UI/UX Design Intern role. Check your registered email for the formal offer letter and next steps.",
+          text: "🎉 Congratulations! ${offerOpp.company} would like to offer you the ${offerOpp.title} role. Check your registered email for the formal offer letter and next steps.",
           at: _daysAgo(2),
         ),
       ],
     ));
   }
 
-  final rejectedOpp = getOpportunityById('opp-marketing-intern');
+  final rejectedOpp = getOpportunityById('JOB0021');
   if (rejectedOpp != null) {
     apps.add(Application(
       id: 'app-seed-rejected',
@@ -137,14 +137,14 @@ List<Application> _seedApplications() {
       messages: [
         ApplicationMessage(
           id: 'm2',
-          text: "Dentsu moved forward with a candidate whose portfolio leaned more into paid-social campaigns — this one's closed.",
+          text: "${rejectedOpp.company} moved forward with a candidate whose campaign work leaned more into paid-social — this one's closed.",
           at: _daysAgo(2),
         ),
       ],
     ));
   }
 
-  final secondRejectedOpp = getOpportunityById('opp-content-intern');
+  final secondRejectedOpp = getOpportunityById('JOB0031');
   if (secondRejectedOpp != null) {
     apps.add(Application(
       id: 'app-seed-rejected-2',
@@ -171,7 +171,7 @@ List<Application> _seedApplications() {
         ),
         ApplicationMessage(
           id: 'm3',
-          text: "Ogilvy decided to go with someone who'd already published in their niche — this one's closed.",
+          text: "${secondRejectedOpp.company} decided to go with someone who'd already run campaigns in their niche — this one's closed.",
           at: _daysAgo(7),
         ),
       ],

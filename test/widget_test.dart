@@ -9,7 +9,7 @@ void main() {
     await tester.pump();
 
     expect(find.byKey(const ValueKey('splash-screen')), findsOneWidget);
-    expect(find.text('pitchvilla'), findsOneWidget);
+    expect(find.text('jobsvilla'), findsOneWidget);
 
     // Flush the splash screen's pending delayed-navigation timers so the
     // test doesn't end with timers still scheduled.

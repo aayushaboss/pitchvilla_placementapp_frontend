@@ -18,6 +18,9 @@ class OpportunityRow extends StatefulWidget {
   final String title;
   final String? subtitle;
   final List<String> meta;
+
+  /// More icon + text details (experience, department, ...) shown under [meta].
+  final List<(IconData, String)> extraMeta;
   final VoidCallback? onTap;
   final bool saved;
   final bool applied;
@@ -50,6 +53,7 @@ class OpportunityRow extends StatefulWidget {
     required this.title,
     this.subtitle,
     this.meta = const [],
+    this.extraMeta = const [],
     this.onTap,
     this.saved = false,
     this.applied = false,
@@ -154,6 +158,15 @@ class _OpportunityRowState extends State<OpportunityRow> {
                           if (widget.meta[i].trim().isNotEmpty)
                             _MetaItem(icon: i < _metaIcons.length ? _metaIcons[i] : Ionicons.ellipse_outline, label: widget.meta[i]),
                       ],
+                    ),
+                  ),
+                if (widget.extraMeta.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.xs),
+                    child: Wrap(
+                      spacing: AppSpacing.md,
+                      runSpacing: AppSpacing.xs,
+                      children: [for (final m in widget.extraMeta) _MetaItem(icon: m.$1, label: m.$2)],
                     ),
                   ),
                 if (!widget.applied && (widget.matchLabel != null || widget.deadlineLabel != null))

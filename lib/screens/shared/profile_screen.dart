@@ -706,7 +706,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.lg),
-                    child: Text('Pitchvilla • v1.0.0', style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12)),
+                    child: Text('Jobsvilla • v1.0.0', style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12)),
                   ),
                 ],
                 );

@@ -82,7 +82,7 @@ class _SupportScreenState extends State<SupportScreen> {
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.xs / 2),
                   child: Text(
-                    "We're here to help with anything on Pitchvilla.",
+                    "We're here to help with anything on Jobsvilla.",
                     textAlign: TextAlign.left,
                     style: AppTextStyles.body.copyWith(color: AppColors.gray500),
                   ),
@@ -177,7 +177,7 @@ class _SupportScreenState extends State<SupportScreen> {
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.xl),
                     child: Center(
-                      child: Text('Pitchvilla • v1.0.0', style: AppTextStyles.caption.copyWith(color: AppColors.gray400)),
+                      child: Text('Jobsvilla • v1.0.0', style: AppTextStyles.caption.copyWith(color: AppColors.gray400)),
                     ),
                   ),
                 ],

@@ -9,13 +9,26 @@ import '../theme/spacing.dart';
 import '../theme/text_styles.dart';
 import 'carousel_section_heading.dart';
 
+/// One icon per course department (the 17 in the course sheet). Unknown
+/// departments fall back to a book icon where this map is read.
 const categoryIcons = {
-  'Counseling': Ionicons.compass_outline,
-  'Technology': Ionicons.code_slash_outline,
-  'Design': Ionicons.color_palette_outline,
-  'Finance': Ionicons.cash_outline,
-  'Science': Ionicons.flask_outline,
-  'Placement': Ionicons.briefcase_outline,
+  'Marketing': Ionicons.megaphone_outline,
+  'Digital Marketing': Ionicons.globe_outline,
+  'Social Media Marketing': Ionicons.share_social_outline,
+  'Sales & Business Development': Ionicons.trending_up_outline,
+  'Business Analytics': Ionicons.bar_chart_outline,
+  'Human Resources': Ionicons.people_outline,
+  'Project Management': Ionicons.clipboard_outline,
+  'Founder / Startup Skills': Ionicons.rocket_outline,
+  'Supply Chain & Logistics': Ionicons.cube_outline,
+  'AI for Business': Ionicons.hardware_chip_outline,
+  'Finance & Accounting': Ionicons.cash_outline,
+  'Operations': Ionicons.settings_outline,
+  'Graphic Designing': Ionicons.color_palette_outline,
+  'E-Commerce': Ionicons.cart_outline,
+  'Product Management': Ionicons.layers_outline,
+  'Business Strategy': Ionicons.compass_outline,
+  'Customer Success': Ionicons.happy_outline,
 };
 
 /// One horizontally-scrolling row of course cards — promoted out of
@@ -31,16 +44,18 @@ class CourseCarouselSection extends StatelessWidget {
   final List<Course> courses;
   final VoidCallback? onViewAll;
 
-  const CourseCarouselSection({super.key, required this.title, required this.courses, this.onViewAll});
+  /// How many cards the row shows before "View all". The Courses page raises
+  /// this so every course in a department is reachable.
+  final int visibleCap;
 
-  static const _visibleCap = 5;
+  const CourseCarouselSection({super.key, required this.title, required this.courses, this.onViewAll, this.visibleCap = 5});
 
   @override
   Widget build(BuildContext context) {
     if (courses.isEmpty) return const SizedBox.shrink();
 
-    final visible = courses.take(_visibleCap).toList();
-    final showViewAllTile = onViewAll != null && courses.length >= _visibleCap;
+    final visible = courses.take(visibleCap).toList();
+    final showViewAllTile = onViewAll != null && courses.length >= visibleCap;
     final itemCount = visible.length + (showViewAllTile ? 1 : 0);
 
     return Column(

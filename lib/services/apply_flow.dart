@@ -169,34 +169,40 @@ void _showApplyGateSheet(BuildContext context, User? user, Opportunity opportuni
           Padding(
             padding: const EdgeInsets.only(top: AppSpacing.lg),
             child: PillButton(
-              label: primaryRoute.contains('resume') ? 'Upload resume' : 'Finish profile',
+              // For the Resume gate the main action is building one with the
+              // Resume Helper (most students do not have a resume yet); uploading
+              // an existing PDF is the quieter link below.
+              label: primaryRoute.contains('resume') ? 'Generate AI resume in 10 mins' : 'Finish profile',
               onPressed: () {
                 Navigator.of(sheetContext).pop();
                 // Resume is the only gate step that leads straight back into
                 // applying — thread the opportunity through so finishing the
-                // upload submits this application automatically instead of
+                // resume submits this application automatically instead of
                 // dropping the user on a generic screen to start over.
-                final target = primaryRoute == '/college/resume' ? '$primaryRoute?applyFor=${opportunity.id}' : primaryRoute;
+                final target = primaryRoute.contains('resume') ? resumeBuildLocation(applyFor: opportunity.id) : primaryRoute;
                 context.push(target);
               },
             ),
           ),
-          // Only when the gate step is actually Resume — "Finish profile"
-          // has no from-scratch equivalent. Routes straight to the builder
-          // (not the upload screen, which already offers this same link one
-          // tap deeper) so it's a genuine one-tap alternative right here.
+          // Only when the gate step is actually Resume — "Finish profile" has
+          // no equivalent. A one-tap alternative for students who already have
+          // a resume file.
           if (primaryRoute.contains('resume'))
             Padding(
               padding: const EdgeInsets.only(top: AppSpacing.md),
               child: GestureDetector(
                 onTap: () {
                   Navigator.of(sheetContext).pop();
-                  context.push(resumeBuildLocation(applyFor: opportunity.id));
+                  context.push('/college/resume?applyFor=${opportunity.id}');
                 },
-                child: Text(
-                  "Don't have one? Build it here",
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 14, fontWeight: AppFontWeight.semibold),
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                  child: Text(
+                    'Already have one? Upload resume',
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 14, fontWeight: AppFontWeight.semibold),
+                  ),
                 ),
               ),
             ),

@@ -54,16 +54,17 @@ const Map<CourseField, List<String>> specializationsByField = {
   CourseField.general: ['Operations', 'Client Work', 'Administration'],
 };
 
-/// Keys match the `_allRoles` list on the Goals screen exactly.
+/// Departments (the 7 in the job spreadsheet) that suit each field of study.
+/// Keys of the values match `mockAllRoles` exactly.
 const Map<CourseField, List<String>> rolesByField = {
-  CourseField.tech: ['Software', 'Data', 'Product', 'Research'],
-  CourseField.business: ['Finance', 'Sales', 'Operations', 'Consulting', 'HR', 'Marketing'],
-  CourseField.humanities: ['Content', 'HR', 'Research', 'Marketing'],
-  CourseField.design: ['Design', 'Product', 'Content'],
-  CourseField.science: ['Research', 'Data', 'Operations'],
-  CourseField.law: ['Consulting', 'Operations', 'Research'],
-  CourseField.medical: ['Research', 'Operations'],
-  CourseField.media: ['Content', 'Marketing', 'Sales'],
-  CourseField.hospitality: ['Operations', 'Sales', 'HR'],
-  CourseField.general: ['Software', 'Data', 'Marketing', 'Finance', 'Design', 'Product', 'Content', 'Sales', 'Operations', 'HR', 'Consulting', 'Research'],
+  CourseField.tech: ['Operations', 'Marketing', 'Sales & Business Development'],
+  CourseField.business: ['Finance & Accounting', 'Sales & Business Development', 'Operations', 'Marketing', 'Human Resource'],
+  CourseField.humanities: ['Human Resource', 'Marketing', 'Social Media Marketing'],
+  CourseField.design: ['Graphic Designing', 'Social Media Marketing', 'Marketing'],
+  CourseField.science: ['Operations', 'Finance & Accounting'],
+  CourseField.law: ['Human Resource', 'Operations'],
+  CourseField.medical: ['Operations', 'Human Resource'],
+  CourseField.media: ['Social Media Marketing', 'Marketing', 'Graphic Designing'],
+  CourseField.hospitality: ['Operations', 'Sales & Business Development', 'Human Resource'],
+  CourseField.general: ['Marketing', 'Sales & Business Development', 'Social Media Marketing', 'Human Resource', 'Operations', 'Graphic Designing', 'Finance & Accounting'],
 };

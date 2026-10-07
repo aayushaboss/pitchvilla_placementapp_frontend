@@ -25,12 +25,10 @@ import '../../widgets/home_search_bar.dart';
 import '../../widgets/responsive_body.dart';
 import 'course_filter_screen.dart';
 
-const _categories = ['Counseling', 'Technology', 'Design', 'Finance', 'Science', 'Placement'];
-
 // Shown in place of Recent searches until the browser has any history, so the
 // suggestion area is never empty. Every term matches a real course title or
 // category (the search matches either), so a tap always lands on results.
-const _popularSearches = ['Technology', 'Design', 'Finance', 'Interview', 'Resume', 'Data'];
+const _popularSearches = ['Marketing', 'AI', 'Sales', 'Finance', 'Operations', 'Design'];
 
 // aptitudeResults (the real source for "Recommended for you") is only ever
 // populated via the school-only /school/aptitude flow — for college this
@@ -40,15 +38,13 @@ const _popularSearches = ['Technology', 'Design', 'Finance', 'Interview', 'Resum
 // course cluster so college gets an equivalent, if coarser, signal
 // instead of just never seeing this section.
 const _roleToClusterFallback = {
-  'Software': 'Technology & Computer Science',
-  'Data': 'Technology & Computer Science',
-  'Product': 'Technology & Computer Science',
-  'Research': 'Technology & Computer Science',
-  'Design': 'Design & Creative',
+  'Marketing': 'Design & Creative',
+  'Social Media Marketing': 'Design & Creative',
+  'Graphic Designing': 'Design & Creative',
+  'Sales & Business Development': 'Humanities & Law',
+  'Human Resource': 'Humanities & Law',
   'Operations': 'Commerce & Finance',
-  'Sales': 'Commerce & Finance',
-  'Consulting': 'Commerce & Finance',
-  'HR': 'Humanities & Law',
+  'Finance & Accounting': 'Commerce & Finance',
 };
 
 /// Mirrors frontend/src/screens/CoursesExplore.tsx (CoursesExplore).
@@ -316,7 +312,7 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
   Widget _desktopCourseTabsGrid(BuildContext context, List<Course> recommended) {
     final topics = <(String key, String label, List<Course> items)>[
       if (recommended.isNotEmpty) ('recommended', 'Recommended for you', recommended),
-      for (final category in _categories) (category, category, filterCourses(category)),
+      for (final category in courseCategories) (category, category, filterCourses(category)),
     ].where((t) => t.$3.isNotEmpty).toList();
     if (topics.isEmpty) return const SizedBox.shrink();
     final selectedKey = topics.any((t) => t.$1 == _selectedCourseTab) ? _selectedCourseTab! : topics.first.$1;
@@ -422,7 +418,7 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
       } else {
         final carousels = [
           if (recommended.isNotEmpty) CourseCarouselSection(title: 'Recommended for you', courses: recommended),
-          for (final category in _categories) CourseCarouselSection(title: category, courses: filterCourses(category)),
+          for (final category in courseCategories) CourseCarouselSection(title: category, courses: filterCourses(category), visibleCap: 12),
         ];
         bodyItems = [
           ..._headerItems(isSchool),

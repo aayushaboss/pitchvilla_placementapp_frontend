@@ -21,6 +21,7 @@ import '../../widgets/back_chevron.dart';
 import '../../widgets/badges.dart';
 import '../../widgets/company_mark.dart';
 import '../../widgets/not_found_view.dart';
+import '../../widgets/opportunity_meta.dart';
 import '../../widgets/opportunity_row.dart';
 import '../../widgets/pill_button.dart';
 import '../../widgets/prep_course_card.dart';
@@ -180,8 +181,14 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
                   child: Row(
                     children: [
                       AppTag(label: o.type),
-                      const SizedBox(width: AppSpacing.sm),
-                      const AppTag(label: 'Actively hiring'),
+                      if (o.experience.isNotEmpty) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        AppTag(label: o.experience),
+                      ],
+                      if (o.demoOpening) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        const AppTag(label: 'Demo opening'),
+                      ],
                     ],
                   ),
                 ),
@@ -205,8 +212,15 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _MetaRow(icon: Ionicons.location_outline, label: o.location),
+                      if (o.sector.isNotEmpty) _MetaRow(icon: Ionicons.business_outline, label: o.sector),
+                      // Internships show the monthly stipend and, under it, the
+                      // LPA-equivalent range from the sheet; jobs show the range.
                       _MetaRow(icon: Ionicons.cash_outline, label: o.stipend),
+                      if (o.internStipend != null && o.salaryRange.isNotEmpty) _MetaRow(icon: Ionicons.cash_outline, label: o.salaryRange),
                       _MetaRow(icon: Ionicons.time_outline, label: o.duration),
+                      if (o.experience.isNotEmpty) _MetaRow(icon: Ionicons.briefcase_outline, label: 'Experience: ${o.experience}'),
+                      if (o.department.isNotEmpty) _MetaRow(icon: Ionicons.layers_outline, label: o.department),
+                      if (o.startupId.isNotEmpty) _MetaRow(icon: Ionicons.finger_print_outline, label: 'Startup ID: ${o.startupId}  ·  Job ID: ${o.id}'),
                     ],
                   ),
                 ),
@@ -247,24 +261,8 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
                               .toList(),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.lg),
-                        child: Text('Work mode', style: AppTextStyles.h3.copyWith(color: AppColors.ink, fontWeight: AppFontWeight.bold)),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.md),
-                        child: Container(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          decoration: BoxDecoration(color: AppColors.offWhite, borderRadius: BorderRadius.circular(AppRadius.xl)),
-                          child: Row(
-                            children: [
-                              const Icon(Ionicons.briefcase_outline, size: 18, color: AppColors.gray500),
-                              const SizedBox(width: AppSpacing.sm),
-                              Text('${o.workMode} • ${o.location}', style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 12, fontWeight: AppFontWeight.medium)),
-                            ],
-                          ),
-                        ),
-                      ),
+                      // (The old "Work mode" block is gone: the job sheet has no
+                      // work-mode column, and every job is a city-based role.)
                       if (_similarOpportunities.isNotEmpty) ...[
                         Padding(
                           padding: const EdgeInsets.only(top: AppSpacing.lg),
@@ -291,7 +289,7 @@ class _OpportunityDetailScreenState extends State<OpportunityDetailScreen> {
                                   tag: s.type,
                                   title: s.title,
                                   subtitle: s.company,
-                                  meta: [s.location, s.stipend],
+                                  meta: [opportunityMeta(s)[0], s.stipend],
                                   deadlineLabel: s.deadlineLabel,
                                   deadlineUrgent: s.deadlineIsUrgent,
                                   // push, not pushReplacement — a

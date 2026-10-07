@@ -16,17 +16,16 @@ final mockSkills = mockOpportunities.expand((o) => o.requirements).toSet().toLis
 
 /// Interested-roles/industries options — shared by onboarding's Goals
 /// screen, Profile Edit, and the college Home opportunity filter's
-/// category picker. Was independently duplicated in two of those three
-/// places before being pulled out here; a third copy would have made that
-/// drift risk worse instead of better. Single words only, on purpose (see
-/// goals_screen.dart's own note on this) — 'Consulting' has no matching
-/// Opportunity.category in the mock catalog (only 11 categories exist
-/// there), so picking it as a filter choice yields zero results, same as
-/// it already silently does today wherever it's picked as an onboarding
-/// role.
+/// category picker. These are exactly the 7 departments in the job
+/// spreadsheet, so every option matches real jobs (Opportunity.category).
 const mockAllRoles = [
-  'Software', 'Data', 'Marketing', 'Finance', 'Design', 'Product',
-  'Content', 'Sales', 'Operations', 'HR', 'Consulting', 'Research',
+  'Marketing',
+  'Sales & Business Development',
+  'Social Media Marketing',
+  'Human Resource',
+  'Operations',
+  'Graphic Designing',
+  'Finance & Accounting',
 ];
 
 const mockCities = [
@@ -51,6 +50,7 @@ const mockCities = [
   'Cuttack',
   'Dehradun',
   'Delhi',
+  'Delhi NCR',
   'Dhanbad',
   'Durgapur',
   'Faridabad',
@@ -650,3 +650,13 @@ const mockSemesters = [
   'Semester 9', 'Semester 10', 'Semester 11', 'Semester 12',
   'Semester 13', 'Semester 14', 'Semester 15', 'Semester 16',
 ];
+
+/// The user's saved interests that still exist in [mockAllRoles]. Accounts
+/// created before the job catalogue switched to the spreadsheet's 7 departments
+/// may carry old role names ("Software", "Data", ...) that match no job; those
+/// are dropped here so the feed falls back to showing every job instead of an
+/// empty page.
+List<String> validRoles(Iterable<String>? roles) => [
+      for (final r in roles ?? const <String>[])
+        if (mockAllRoles.contains(r)) r,
+    ];

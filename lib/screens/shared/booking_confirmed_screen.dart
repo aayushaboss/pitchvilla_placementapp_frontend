@@ -105,7 +105,7 @@ class _BookingConfirmedScreenState extends State<BookingConfirmedScreen> with Si
       'action': 'TEMPLATE',
       'text': _eventTitle,
       'dates': '${_icsDateTimeUtc(start)}/${_icsDateTimeUtc(end)}',
-      'details': 'Pitchvilla session with ${widget.counselor}',
+      'details': 'Jobsvilla session with ${widget.counselor}',
       'location': _eventLocation,
     });
     await launchUrl(uri, mode: LaunchMode.externalApplication);

@@ -4,8 +4,12 @@ import 'package:pitchvilla/data/repositories/mock_application_repository.dart';
 import 'package:pitchvilla/mockData/mock_applications.dart' show setApplicationsUser;
 import 'package:pitchvilla/mockData/mock_opportunities.dart' show mockOpportunities;
 
+import '../helpers/load_catalog.dart';
+
 void main() {
   late MockApplicationRepository repo;
+
+  setUpAll(loadCatalogFromDisk);
 
   setUp(() {
     // A fresh, unseeded user id — avoids interaction with the showcase

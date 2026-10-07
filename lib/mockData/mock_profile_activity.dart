@@ -19,9 +19,9 @@ int _seeded(String seed, int salt, int max) {
 }
 
 const _activityCompanies = [
-  'Microsoft', 'Deloitte', 'Dentsu', 'Morgan Stanley',
-  'Adobe', 'Amazon', 'Ogilvy', 'Accenture',
-  'IBM', 'EY', 'JPMorgan Chase', 'DHL',
+  'Zerodha', 'Razorpay', 'Flipkart', 'Swiggy',
+  'PhonePe', 'Zomato', 'OYO', 'Lenskart',
+  'Groww', 'Meesho', 'Zepto', 'CRED',
 ];
 
 const _actionTypes = [

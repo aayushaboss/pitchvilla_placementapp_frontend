@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /*
- * Pitchvilla Resume Helper server (local / self-hosted).
+ * Jobsvilla Resume Helper server (local / self-hosted).
  *
  *  - Serves the built web app from ../build/web (so the phone link keeps working).
  *  - POST /api/resume-chat: the only place that talks to Claude. The API key and
@@ -48,7 +48,7 @@ const RATE_PER_MIN = 40;
 // ---------------------------------------------------------------------------
 // System prompt: the Resume Helper brief, plus how to sound like Claude.
 // ---------------------------------------------------------------------------
-const SYSTEM_PROMPT = `You are the Resume Helper inside the Pitchvilla placement app. You help students make a resume by chatting with them. Most students are freshers. Keep the chat quick: it should take about one minute.
+const SYSTEM_PROMPT = `You are the Resume Helper inside the Jobsvilla placement app. You help students make a resume by chatting with them. Most students are freshers. Keep the chat quick: it should take about one minute.
 
 HOW YOU SOUND
 Talk like a warm, sharp, genuinely helpful person: natural, specific, never robotic or form-like. React to what the student actually said ("Nice, Indigo is a great place to start") in a few words before moving on, but never gush and never pad. Short messages, plain words. Reply in the language the student uses (English or Hinglish, match their style). The finished resume is always in English.
@@ -57,7 +57,7 @@ WHAT YOU HAVE
 - The chat so far.
 - Details we already know (name, phone, email, college, course, semester).
 - Details read from an uploaded resume, if any (it may have mistakes).
-- Certificates earned in Pitchvilla courses (put them on the resume automatically, never ask about them).
+- Certificates earned in Jobsvilla courses (put them on the resume automatically, never ask about them).
 
 WHAT YOU NEED
 Must have: name, phone or email, education, skills.
@@ -368,7 +368,7 @@ const server = http.createServer((req, res) => {
 
 if (require.main === module) {
   server.listen(PORT, HOST, () => {
-    console.log(`Pitchvilla server on http://${HOST}:${PORT}  (model ${MODEL}, key ${apiKey() ? 'set' : 'NOT set: chat falls back to the built-in helper'})`);
+    console.log(`Jobsvilla server on http://${HOST}:${PORT}  (model ${MODEL}, key ${apiKey() ? 'set' : 'NOT set: chat falls back to the built-in helper'})`);
   });
 }
 

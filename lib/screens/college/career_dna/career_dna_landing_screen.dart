@@ -207,13 +207,29 @@ class _CareerDnaLandingScreenState extends State<CareerDnaLandingScreen> {
                       borderRadius: BorderRadius.circular(AppRadius.md),
                     ),
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Ionicons.eye_outline, size: 16, color: AppColors.gray500),
-                        const SizedBox(width: AppSpacing.sm),
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2),
+                          child: Icon(Ionicons.ribbon_outline, size: 18, color: AppColors.ink),
+                        ),
+                        const SizedBox(width: AppSpacing.md - 4),
                         Expanded(
-                          child: Text(
-                            noOrphan('Free 10-min test, attached to your resume for recruiters.'),
-                            style: AppTextStyles.caption.copyWith(color: AppColors.ink, fontSize: 12, height: 1.35),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Free 10-min career test',
+                                style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 14, fontWeight: AppFontWeight.semibold),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  noOrphan('Stand out to recruiters with an international-standard assessment, added to your resume.'),
+                                  style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12, height: 1.4),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

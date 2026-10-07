@@ -5,13 +5,16 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'data/repositories.dart';
+import 'mockData/catalog_loader.dart';
 import 'router.dart';
 import 'state/app_state.dart';
 import 'theme/app_theme.dart';
 import 'theme/colors.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // The job and course catalogue (spreadsheet data) must be ready before any screen reads it.
+  await loadCatalog();
   // Portrait only — this is a phone-shaped experience and landscape adds
   // nothing. Covers native Android/iOS; on web it's a no-op (web/index.html
   // and web/manifest.json handle the browser + installed-PWA cases).
@@ -51,7 +54,7 @@ class _PitchvillaAppState extends State<PitchvillaApp> {
         Provider<Repositories>.value(value: _repositories),
       ],
       child: MaterialApp.router(
-        title: 'Pitchvilla',
+        title: 'Jobsvilla',
         // On web this becomes the page's <meta name="theme-color"> (the mobile
         // browser toolbar / task-switcher colour). Without it Flutter falls back
         // to the theme's primary colour, which is the brand yellow.

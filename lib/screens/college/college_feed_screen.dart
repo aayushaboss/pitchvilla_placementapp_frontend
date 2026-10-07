@@ -7,6 +7,7 @@ import '../../data/repositories.dart';
 import '../../mockData/mock_bookings.dart';
 import '../../mockData/mock_courses.dart';
 import '../../mockData/mock_notifications.dart';
+import '../../mockData/mock_profile_options.dart';
 import '../../mockData/related_roles.dart';
 import '../../models/booking.dart';
 import '../../models/job_preferences.dart';
@@ -30,7 +31,9 @@ import '../../widgets/empty_state.dart';
 import '../../widgets/home_header.dart';
 import '../../widgets/home_search_bar.dart';
 import '../../widgets/opportunity_carousel_section.dart';
+import '../../widgets/opportunity_meta.dart';
 import '../../widgets/opportunity_row.dart';
+import '../../widgets/pill_button.dart';
 import '../../widgets/responsive_body.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../widgets/sort_dropdown.dart';
@@ -123,11 +126,11 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
     );
     // Most-relevant-first, matching the user's selected roles/resume —
     // ties keep the original (curated) order via a stable sort.
-    results.sort(
-      (a, b) => b.matchScoreFor(user).compareTo(a.matchScoreFor(user)),
-    );
+    final scores = {for (final o in results) o.id: o.matchScoreFor(user)};
+    results.sort((a, b) => scores[b.id]!.compareTo(scores[a.id]!));
     if (!mounted) return;
     setState(() {
+      _rowLimit = _pageSize;
       _opps = results;
       _bookings = listBookings();
       _loading = false;
@@ -211,6 +214,25 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
 
   static const _sectionCap = 10;
 
+  // The flat result lists (filtered view, desktop topic grid) build one row per
+  // job. With 1,000 jobs that is far too many to build at once, so they show a
+  // page at a time with a "Show more" button.
+  static const _pageSize = 30;
+  int _rowLimit = _pageSize;
+
+  Widget _showMore(int total) {
+    if (total <= _rowLimit) return const SizedBox.shrink();
+    final left = total - _rowLimit;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.lg),
+      child: PillButton(
+        label: 'Show more ($left more)',
+        variant: PillVariant.secondary,
+        onPressed: () => setState(() => _rowLimit += _pageSize),
+      ),
+    );
+  }
+
   /// Naukri-style "browse by topic" instead of one long vertical scroll,
   /// which stops being usable once there are hundreds of postings — a
   /// top-matches row, then one row per role the user picked as interested
@@ -232,7 +254,7 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
   static const _targetCarouselCount = 4;
 
   List<Widget> _sections(List<Opportunity> opps, AppState appState, User? user) {
-    final roles = user?.roles ?? const <String>[];
+    final roles = validRoles(user?.roles);
     final sections = <Widget>[];
     final shownOpps = <Opportunity>[];
 
@@ -318,7 +340,7 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
   // grid instead). Mobile/tablet never call this — _sections() itself is
   // completely untouched.
   List<({String key, String label, List<Opportunity> opps})> _topics(List<Opportunity> opps, User? user) {
-    final roles = user?.roles ?? const <String>[];
+    final roles = validRoles(user?.roles);
     final topics = <({String key, String label, List<Opportunity> opps})>[];
 
     if (roles.isEmpty) {
@@ -372,7 +394,8 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
         return da.compareTo(db);
       });
     } else {
-      sorted.sort((a, b) => b.matchScoreFor(user).compareTo(a.matchScoreFor(user)));
+      final scores = {for (final o in sorted) o.id: o.matchScoreFor(user)};
+      sorted.sort((a, b) => scores[b.id]!.compareTo(scores[a.id]!));
     }
     return sorted;
   }
@@ -418,7 +441,10 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
             // Mana…"), reading as cramped/messy. A full-width row per card
             // (a real list) matches the reference mockup's actual structure
             // and gives every title room to read in full.
-            children: _rowsChunked(context, appState, user, sorted, 1),
+            children: [
+              ..._rowsChunked(context, appState, user, sorted.take(_rowLimit).toList(), 1),
+              _showMore(sorted.length),
+            ],
           ),
         ),
       ],
@@ -430,7 +456,8 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
       tag: o.type,
       title: o.title,
       subtitle: o.company,
-      meta: [o.location, o.stipend, o.duration],
+      meta: opportunityMeta(o),
+      extraMeta: opportunityExtraMeta(o),
       matchLabel: o.matchLabelFor(user),
       deadlineLabel: o.deadlineLabel,
       deadlineUrgent: o.deadlineIsUrgent,
@@ -492,11 +519,12 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
     // already eats real width too. A full-width row per card reads as a
     // clean list instead.
     final columns = width >= AppBreakpoints.tablet ? 1 : (width >= AppBreakpoints.tablet ? 2 : 1);
-    final categories = {for (final o in opps) o.category}.toList();
+    final shownOpps = opps.take(_rowLimit).toList();
+    final categories = {for (final o in shownOpps) o.category}.toList();
     if (categories.length <= 1) {
-      return _rowsChunked(context, appState, user, opps, columns);
+      return [..._rowsChunked(context, appState, user, shownOpps, columns), _showMore(opps.length)];
     }
-    final grouped = groupByCategory<Opportunity>(opps, (o) => o.category);
+    final grouped = groupByCategory<Opportunity>(shownOpps, (o) => o.category);
     return [
       for (final entry in grouped.entries) ...[
         // top: lg matches courses_explore_screen.dart's _categoryHeading
@@ -509,6 +537,7 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
         ),
         ..._rowsChunked(context, appState, user, entry.value, columns),
       ],
+      _showMore(opps.length),
     ];
   }
 

@@ -8,24 +8,23 @@ const List<NotificationItem> mockNotifications = [
     id: 'n1',
     group: 'Today',
     title: '3 new internships match your goals',
-    body: 'Fresh Software roles just opened — take a look.',
+    body: 'Fresh Digital Marketing internships just opened — take a look.',
     type: 'opportunity',
     unread: true,
-    // The exact 3 Software internships this notification promised — not a
-    // live category filter, since that would silently drift out of sync
-    // with "3" as the mock catalog changes. See OpportunityListScreen.ids.
-    // (Deliberately none of these is 'opp-frontend-intern' — the seed data
-    // in mock_applications.dart already has an application in for that one,
-    // and OpportunityListScreen hides already-applied roles, which would
-    // quietly shrink this to 2 cards.)
+    // The exact 3 internships this notification promised (PhonePe, Zomato and
+    // OYO Digital Marketing Interns from the job sheet) — not a live category
+    // filter, since that would silently drift out of sync with "3". See
+    // OpportunityListScreen.ids. (None of them is one of the jobs the seed
+    // applications in mock_applications.dart already applied to, because
+    // OpportunityListScreen hides already-applied roles.)
     route: '/opportunities?title=New%20internships%20for%20you'
-        '&ids=opp-extra-0-software-engineer-intern,opp-extra-2-mobile-app-developer-intern,opp-extra-3-qa-engineer-intern',
+        '&ids=JOB0041,JOB0051,JOB0061',
   ),
   NotificationItem(
     id: 'n2',
     group: 'Today',
     title: "You're shortlisted! 🎉",
-    body: 'Microsoft wants to interview you for Frontend Developer Intern.',
+    body: 'Razorpay wants to interview you for Digital Marketing Intern.',
     type: 'application',
     unread: true,
     route: '/application/app-seed-interview',
@@ -33,7 +32,7 @@ const List<NotificationItem> mockNotifications = [
   NotificationItem(
     id: 'n3',
     group: 'Earlier',
-    title: 'Welcome to Pitchvilla',
+    title: 'Welcome to Jobsvilla',
     body: 'Your journey to the right next step starts here.',
     type: 'system',
     unread: false,
@@ -67,7 +66,7 @@ const List<NotificationItem> mockSchoolNotifications = [
   NotificationItem(
     id: 'n3',
     group: 'Earlier',
-    title: 'Welcome to Pitchvilla',
+    title: 'Welcome to Jobsvilla',
     body: 'Your journey to the right next step starts here.',
     type: 'system',
     unread: false,

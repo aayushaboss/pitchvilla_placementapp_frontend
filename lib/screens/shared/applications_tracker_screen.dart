@@ -705,7 +705,7 @@ class _ApplicationCard extends StatelessWidget {
                                   context,
                                   prepCoursesForOpportunities(opportunity != null ? [opportunity] : const []),
                                   heading: 'Prep for this interview',
-                                  subtitle: 'Pitchvilla picks for the ${a.opportunity.title} role.',
+                                  subtitle: 'Jobsvilla picks for the ${a.opportunity.title} role.',
                                 ),
                               ),
                             ],

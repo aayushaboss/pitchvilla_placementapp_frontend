@@ -1,11 +1,11 @@
 {
-    "name": "Pitchvilla",
-    "short_name": "Pitchvilla",
+    "name": "Jobsvilla",
+    "short_name": "Jobsvilla",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#FFFFFF",
-    "description": "Pitchvilla - internships and jobs curated just for you.",
+    "description": "Jobsvilla - India's startup talent network. Internships and full-time jobs at top startups.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

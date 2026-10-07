@@ -7,7 +7,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>Pitchvilla</string>
+		<string>Jobsvilla</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -74,12 +74,12 @@
 		     gallery). Missing these crashes the app the instant the picker
 		     is invoked, rather than just failing to prompt. -->
 		<key>NSCameraUsageDescription</key>
-		<string>Pitchvilla needs camera access so you can take a photo for your profile or record your video introduction.</string>
+		<string>Jobsvilla needs camera access so you can take a photo for your profile or record your video introduction.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Pitchvilla needs photo library access so you can choose a photo or video from your library for your profile.</string>
+		<string>Jobsvilla needs photo library access so you can choose a photo or video from your library for your profile.</string>
 		<!-- video_profile_screen.dart's pickVideo(source: camera) records
 		     audio along with video. -->
 		<key>NSMicrophoneUsageDescription</key>
-		<string>Pitchvilla needs microphone access to record audio for your video introduction.</string>
+		<string>Jobsvilla needs microphone access to record audio for your video introduction.</string>
 	</dict>
 </plist>

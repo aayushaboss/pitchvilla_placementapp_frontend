@@ -220,7 +220,10 @@ class _SuggestedForYouState extends State<_SuggestedForYou> {
     if (suggestions.isEmpty) {
       suggestions = pool.where((o) => o.type == app.opportunity.type).toList();
     }
-    suggestions.sort((a, b) => b.matchScoreFor(user).compareTo(a.matchScoreFor(user)));
+    // Score each job once (not twice per comparison): the pool is the whole
+    // 1,000-job catalogue and this runs on every rebuild.
+    final scores = {for (final o in suggestions) o.id: o.matchScoreFor(user)};
+    suggestions.sort((a, b) => scores[b.id]!.compareTo(scores[a.id]!));
     final shown = suggestions.take(8).toList();
     if (shown.isEmpty) return const SizedBox.shrink();
 

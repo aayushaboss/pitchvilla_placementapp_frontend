@@ -114,6 +114,11 @@ class _CourseDetailScreenState extends State<CourseDetailScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _MetaRow(icon: Ionicons.time_outline, label: c.duration),
+                      if (c.months > 0)
+                        _MetaRow(
+                          icon: Ionicons.calendar_outline,
+                          label: 'About ${c.months == c.months.roundToDouble() ? c.months.round() : c.months} months',
+                        ),
                       _MetaRow(icon: Ionicons.albums_outline, label: '${c.modules} modules'),
                       const _MetaRow(icon: Ionicons.ribbon_outline, label: 'Certificate on completion'),
                     ],
