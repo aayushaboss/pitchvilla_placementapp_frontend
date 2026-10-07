@@ -137,7 +137,6 @@ class _OpportunityListScreenState extends State<OpportunityListScreen> {
                               title: o.title,
                               subtitle: o.company,
                               meta: opportunityMeta(o),
-                              extraMeta: opportunityExtraMeta(o),
                               matchLabel: o.matchLabelFor(user),
                               deadlineLabel: o.deadlineLabel,
                               deadlineUrgent: o.deadlineIsUrgent,

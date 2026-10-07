@@ -1,3 +1,4 @@
+import '../mockData/mock_profile_options.dart' show validRoles;
 import 'opportunity.dart';
 import 'user.dart';
 
@@ -18,7 +19,8 @@ extension OpportunityMatch on Opportunity {
     if (user == null) return 0;
     var score = 0;
 
-    final roles = user.roles ?? const [];
+    // Old role names map onto the current departments (see validRoles).
+    final roles = validRoles(user.roles);
     if (roles.any((r) => r.toLowerCase() == category.toLowerCase())) {
       score += 60;
     }

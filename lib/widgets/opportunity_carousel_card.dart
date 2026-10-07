@@ -35,7 +35,7 @@ class OpportunityCarouselCard extends StatelessWidget {
   // learned this lesson once (height bumped 222 → 262 → 290 after the
   // 2-line-title + tags-row combination kept overflowing a "just barely
   // fits" budget).
-  static const double height = 326;
+  static const double height = 260;
 
   // 2 lines at the title's own 15px/1.25 line-height (≈18.75px/line) —
   // reserved unconditionally so a 1-line title leaves identical space
@@ -52,20 +52,6 @@ class OpportunityCarouselCard extends StatelessWidget {
   final String company;
   final String location;
   final String stipend;
-
-  /// Startup sector (e.g. "FinTech"), shown next to the city.
-  final String sector;
-
-  /// "Internship" / "Full-time" and the experience asked for ("0–1 Year").
-  final String typeLabel;
-  final String experience;
-
-  /// Second pay line for internships: the LPA-equivalent range printed under
-  /// the monthly stipend. Null when there is nothing more to say.
-  final String? payNote;
-
-  /// The sheet's "Demo Opening" flag, shown as a small chip.
-  final bool demoOpening;
   final String? matchLabel;
   final String? deadlineLabel;
   final bool deadlineUrgent;
@@ -86,11 +72,6 @@ class OpportunityCarouselCard extends StatelessWidget {
     required this.company,
     required this.location,
     required this.stipend,
-    this.sector = '',
-    this.typeLabel = '',
-    this.experience = '',
-    this.payNote,
-    this.demoOpening = false,
     this.matchLabel,
     this.deadlineLabel,
     this.deadlineUrgent = false,
@@ -120,7 +101,6 @@ class OpportunityCarouselCard extends StatelessWidget {
           bg: deadlineUrgent ? AppColors.errorA10 : AppColors.gray500A15,
           compact: true,
         ),
-      if (demoOpening) const AppTag(label: 'Demo opening', color: AppColors.gray500, bg: AppColors.gray500A15, compact: true),
     ];
     if (chips.isEmpty && tag != null && tag!.isNotEmpty) {
       chips.add(AppTag(label: tag!, color: AppColors.gray500, bg: AppColors.gray500A15, compact: true));
@@ -209,74 +189,38 @@ class OpportunityCarouselCard extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
                   child: Divider(height: 1, color: AppColors.border),
                 ),
-                // City and sector. Two lines are reserved so a long sector
-                // ("E-commerce / Logistics") wraps instead of being cut off.
-                SizedBox(
-                  height: 32,
-                  child: Align(
-                    alignment: Alignment.topLeft,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(top: 1),
-                          child: Icon(Ionicons.location_outline, size: 14, color: AppColors.gray500),
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: Text(
-                            sector.isEmpty ? location : '$location · $sector',
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12, height: 1.3, fontWeight: AppFontWeight.medium),
-                          ),
-                        ),
-                      ],
+                // City on one line and pay on the next: the spreadsheet's pay text is
+                // long ("₹17,000–₹25,000/month"), and beside the city it squeezed the
+                // city down to "Be…". The card already had room for the extra line.
+                Row(
+                  children: [
+                    const Icon(Ionicons.location_outline, size: 14, color: AppColors.gray500),
+                    const SizedBox(width: AppSpacing.xs),
+                    Flexible(
+                      child: Text(
+                        location,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12, fontWeight: AppFontWeight.medium),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-                if (typeLabel.isNotEmpty || experience.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Row(
-                      children: [
-                        const Icon(Ionicons.briefcase_outline, size: 14, color: AppColors.gray500),
-                        const SizedBox(width: AppSpacing.xs),
-                        Expanded(
-                          child: Text(
-                            [if (typeLabel.isNotEmpty) typeLabel, if (experience.isNotEmpty) experience].join(' · '),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12, fontWeight: AppFontWeight.medium),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                // Pay: the monthly stipend (internships) or the salary range,
-                // plus the LPA-equivalent line for internships. Two lines reserved.
                 Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: SizedBox(
-                    height: 38,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: Row(
+                    children: [
+                      const Icon(Ionicons.cash_outline, size: 14, color: AppColors.gray500),
+                      const SizedBox(width: AppSpacing.xs),
+                      Flexible(
+                        child: Text(
                           stipend,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.caption.copyWith(color: AppColors.ink, fontSize: 13, fontWeight: AppFontWeight.semibold),
+                          style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12, fontWeight: AppFontWeight.medium),
                         ),
-                        if (payNote != null)
-                          Text(
-                            payNote!,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 11, fontWeight: AppFontWeight.medium),
-                          ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
                 Padding(

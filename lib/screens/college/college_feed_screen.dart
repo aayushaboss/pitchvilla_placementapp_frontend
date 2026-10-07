@@ -212,6 +212,8 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
     ];
   }
 
+  // Cards held in each department row; the heading shows the real total and the
+  // "View all" tile opens every job in that department.
   static const _sectionCap = 10;
 
   // The flat result lists (filtered view, desktop topic grid) build one row per
@@ -251,7 +253,6 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
   /// rather than mixed in unsorted. The budget below is derived from how
   /// many role-specific rows already rendered, so a broadly-interested
   /// student who already picked several roles doesn't get padded further.
-  static const _targetCarouselCount = 4;
 
   List<Widget> _sections(List<Opportunity> opps, AppState appState, User? user) {
     final roles = validRoles(user?.roles);
@@ -269,6 +270,7 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
       sections.add(OpportunityCarouselSection(
         title: title,
         opportunities: capped,
+        totalCount: items.length,
         matchLabel: (o) => o.matchLabelFor(user),
         isApplied: (o) => context.read<Repositories>().applications.isOpportunityApplied(o.id),
         isSaved: (o) => appState.isOpportunitySaved(o.id),
@@ -290,24 +292,16 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
 
     for (final role in roles) {
       final inRole = opps.where((o) => o.category.toLowerCase() == role.toLowerCase()).toList();
-      addSection('$role jobs', inRole, category: role);
+      addSection(role, inRole, category: role);
     }
 
-    final relatedBudget = (_targetCarouselCount - 1 - roles.length).clamp(0, 3);
-    if (roles.isNotEmpty && relatedBudget > 0) {
-      final ownRoles = roles.map((r) => r.toLowerCase()).toSet();
-      final addedRelated = <String>{};
-      for (final role in roles) {
-        for (final candidate in relatedRoles[role] ?? const <String>[]) {
-          final key = candidate.toLowerCase();
-          if (ownRoles.contains(key) || addedRelated.contains(key)) continue;
-          if (addedRelated.length >= relatedBudget) break;
-          addedRelated.add(key);
-          final inCategory = opps.where((o) => o.category.toLowerCase() == key).toList();
-          addSection('Related to $candidate', inCategory, category: candidate);
-        }
-        if (addedRelated.length >= relatedBudget) break;
-      }
+    // Every other department gets its own row too, after the user's own, so all
+    // 1,000 jobs are reachable from Home (each row's "View all" opens that whole
+    // department). Previously only the chosen roles plus a few related ones showed.
+    for (final dept in mockAllRoles) {
+      if (roles.contains(dept)) continue;
+      final inDept = opps.where((o) => o.category == dept).toList();
+      addSection(dept, inDept, category: dept);
     }
 
     // Closes the scroll instead of just stopping — courses tied to
@@ -344,30 +338,24 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
     final topics = <({String key, String label, List<Opportunity> opps})>[];
 
     if (roles.isEmpty) {
-      if (opps.isNotEmpty) topics.add((key: 'all', label: 'Jobs for you', opps: opps));
+      if (opps.isNotEmpty) topics.add((key: 'all', label: 'All jobs', opps: opps));
+      for (final dept in mockAllRoles) {
+        final inDept = opps.where((o) => o.category == dept).toList();
+        if (inDept.isNotEmpty) topics.add((key: dept, label: dept, opps: inDept));
+      }
       return topics;
     }
 
     for (final role in roles) {
       final inRole = opps.where((o) => o.category.toLowerCase() == role.toLowerCase()).toList();
-      if (inRole.isNotEmpty) topics.add((key: role, label: '$role jobs', opps: inRole));
+      if (inRole.isNotEmpty) topics.add((key: role, label: role, opps: inRole));
     }
 
-    final relatedBudget = (_targetCarouselCount - 1 - roles.length).clamp(0, 3);
-    if (relatedBudget > 0) {
-      final ownRoles = roles.map((r) => r.toLowerCase()).toSet();
-      final addedRelated = <String>{};
-      for (final role in roles) {
-        for (final candidate in relatedRoles[role] ?? const <String>[]) {
-          final key = candidate.toLowerCase();
-          if (ownRoles.contains(key) || addedRelated.contains(key)) continue;
-          if (addedRelated.length >= relatedBudget) break;
-          addedRelated.add(key);
-          final inCategory = opps.where((o) => o.category.toLowerCase() == key).toList();
-          if (inCategory.isNotEmpty) topics.add((key: candidate, label: 'Related to $candidate', opps: inCategory));
-        }
-        if (addedRelated.length >= relatedBudget) break;
-      }
+    // Every other department as a tab after the user's own.
+    for (final dept in mockAllRoles) {
+      if (roles.contains(dept)) continue;
+      final inDept = opps.where((o) => o.category == dept).toList();
+      if (inDept.isNotEmpty) topics.add((key: dept, label: dept, opps: inDept));
     }
 
     return topics;
@@ -457,7 +445,6 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
       title: o.title,
       subtitle: o.company,
       meta: opportunityMeta(o),
-      extraMeta: opportunityExtraMeta(o),
       matchLabel: o.matchLabelFor(user),
       deadlineLabel: o.deadlineLabel,
       deadlineUrgent: o.deadlineIsUrgent,

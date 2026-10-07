@@ -19,6 +19,10 @@ class OpportunityCarouselSection extends StatelessWidget {
   final String title;
   final List<Opportunity> opportunities;
   final VoidCallback? onViewAll;
+
+  /// How many jobs the topic really has (the lane itself only holds the first
+  /// few). Shown in the heading so "Marketing jobs (300)" is not read as 10.
+  final int? totalCount;
   final String? Function(Opportunity) matchLabel;
   final bool Function(Opportunity) isApplied;
   final void Function(Opportunity) onTapCard;
@@ -35,13 +39,14 @@ class OpportunityCarouselSection extends StatelessWidget {
     required this.onTapCard,
     required this.onApply,
     this.onViewAll,
+    this.totalCount,
     this.isSaved,
     this.onToggleSave,
   });
 
   /// Cards shown in the lane before the trailing "View all" tile — the
   /// rest are reachable via that tile / the list screen.
-  static const _visibleCap = 5;
+  static const _visibleCap = 10;
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +59,7 @@ class OpportunityCarouselSection extends StatelessWidget {
     // carousel showing exactly the cap still gets the tile: the list screen
     // it opens isn't goal-type-filtered the way this feed carousel is, so
     // it genuinely reveals more.
-    final showViewAllTile = onViewAll != null && opportunities.length >= _visibleCap;
+    final showViewAllTile = onViewAll != null && (totalCount ?? opportunities.length) >= _visibleCap;
     final itemCount = visible.length + (showViewAllTile ? 1 : 0);
 
     // No outer bottom padding — the carousel's own bottom shadow buffer
@@ -67,7 +72,7 @@ class OpportunityCarouselSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        CarouselSectionHeading(title: title, count: opportunities.length),
+        CarouselSectionHeading(title: title, count: totalCount ?? opportunities.length),
         // No explicit gap here — the carousel's own top padding below is
         // the gap, and it's also the shadow-safety buffer for
         // AppShadows.card (see AppShadows.cardBuffer).
@@ -106,11 +111,6 @@ class OpportunityCarouselSection extends StatelessWidget {
                   company: o.company,
                   location: o.location,
                   stipend: o.stipend,
-                  sector: o.sector,
-                  typeLabel: o.type,
-                  experience: o.experience,
-                  payNote: o.internStipend != null && o.salaryRange.isNotEmpty ? o.salaryRange : null,
-                  demoOpening: o.demoOpening,
                   tag: o.type,
                   matchLabel: applied ? null : matchLabel(o),
                   deadlineLabel: applied ? null : o.deadlineLabel,

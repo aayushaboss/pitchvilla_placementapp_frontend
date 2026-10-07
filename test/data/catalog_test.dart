@@ -79,9 +79,11 @@ void main() {
       expect(mockCities, contains('Delhi NCR'));
     });
 
-    test('roles are the 7 job departments; stale saved roles are dropped', () {
+    test('roles are the 7 job departments; old saved roles map onto them', () {
       expect(mockAllRoles.toSet(), mockOpportunities.map((o) => o.category).toSet());
-      expect(validRoles(['Software', 'Marketing', 'Data']), ['Marketing']);
+      expect(validRoles(['Software', 'Marketing', 'Data']), ['Operations', 'Marketing']);
+      expect(validRoles(['Design', 'HR']), ['Graphic Designing', 'Human Resource']);
+      expect(validRoles(['Unknown role']), isEmpty);
     });
   });
 

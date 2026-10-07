@@ -651,12 +651,32 @@ const mockSemesters = [
   'Semester 13', 'Semester 14', 'Semester 15', 'Semester 16',
 ];
 
-/// The user's saved interests that still exist in [mockAllRoles]. Accounts
-/// created before the job catalogue switched to the spreadsheet's 7 departments
-/// may carry old role names ("Software", "Data", ...) that match no job; those
-/// are dropped here so the feed falls back to showing every job instead of an
-/// empty page.
-List<String> validRoles(Iterable<String>? roles) => [
-      for (final r in roles ?? const <String>[])
-        if (mockAllRoles.contains(r)) r,
-    ];
+/// Accounts created before the job catalogue switched to the spreadsheet's 7
+/// departments saved interests from the old role list. Each old role is mapped
+/// to the closest department so those users still see rows for what they chose.
+const _legacyRoleToDepartment = {
+  'Software': 'Operations',
+  'Data': 'Operations',
+  'Product': 'Operations',
+  'Research': 'Operations',
+  'Consulting': 'Operations',
+  'Operations': 'Operations',
+  'Design': 'Graphic Designing',
+  'Content': 'Social Media Marketing',
+  'Marketing': 'Marketing',
+  'Sales': 'Sales & Business Development',
+  'HR': 'Human Resource',
+  'Finance': 'Finance & Accounting',
+};
+
+/// The user's interests as current department names, in the order they chose
+/// them, without repeats. Old role names are mapped (see above); anything that
+/// matches nothing is dropped, and an empty result means "no preference".
+List<String> validRoles(Iterable<String>? roles) {
+  final out = <String>[];
+  for (final r in roles ?? const <String>[]) {
+    final dept = mockAllRoles.contains(r) ? r : _legacyRoleToDepartment[r];
+    if (dept != null && !out.contains(dept)) out.add(dept);
+  }
+  return out;
+}
