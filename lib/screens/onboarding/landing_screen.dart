@@ -221,21 +221,11 @@ class _LandingScreenState extends State<LandingScreen> with SingleTickerProvider
                                       ),
                                     ),
                                   ),
-                                  // Quietest text on the page: the network tagline and credit.
-                                  Center(
-                                    child: Text.rich(
-                                      textAlign: TextAlign.center,
-                                      TextSpan(
-                                        style: AppTextStyles.caption.copyWith(color: AppColors.gray400, fontSize: 11, height: 1.5),
-                                        children: [
-                                          const TextSpan(text: "India's Startup Talent Network\nPowered by "),
-                                          TextSpan(
-                                            text: 'Pitchvilla',
-                                            style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 11, fontWeight: AppFontWeight.semibold, height: 1.5),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                                  // Quietest text on the page: one line, one colour, one weight, so it
+                                  // reads as a footer rather than a second block of copy.
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: AppSpacing.xs),
+                                    child: _FooterLine(),
                                   ),
                                 ],
                               ),
@@ -273,6 +263,25 @@ class _Reveal extends StatelessWidget {
         animation: curved,
         builder: (context, child) => Transform.translate(offset: Offset(0, (1 - curved.value) * 14), child: child),
         child: child,
+      ),
+    );
+  }
+}
+
+/// "India's Startup Talent Network · Powered by Pitchvilla": a single quiet line.
+class _FooterLine extends StatelessWidget {
+  const _FooterLine();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          "India's Startup Talent Network  ·  Powered by Pitchvilla",
+          maxLines: 1,
+          style: AppTextStyles.caption.copyWith(color: AppColors.gray400, fontSize: 11),
+        ),
       ),
     );
   }
