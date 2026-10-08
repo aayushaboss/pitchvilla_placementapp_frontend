@@ -25,7 +25,6 @@ import '../../utils/group_by_category.dart';
 import '../../utils/no_orphan.dart';
 import '../../utils/scroll_to_top_registry.dart';
 import '../../widgets/auto_carousel.dart';
-import '../../widgets/category_tab_bar.dart';
 import '../../widgets/course_carousel_section.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/home_header.dart';
@@ -62,11 +61,6 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
   bool _loading = true;
   final _scrollController = ScrollController();
   int _lastSeenDataVersion = -1;
-  // Desktop-only tabs+grid state (see _desktopTopicGrid) — null until a
-  // real topic key is computed and picked, at which point it sticks even
-  // if _load() reruns, so switching a filter doesn't silently reset which
-  // tab the user was looking at.
-  String? _selectedTopic;
   String _homeSort = 'match';
   // Consumed once, here, not read fresh in build() — a mid-session
   // rebuild (a filter change, a data refresh) shouldn't flip the header
@@ -327,49 +321,7 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
     return sections;
   }
 
-  // Desktop-only sibling of _sections() above — same role + related-backfill
-  // computation (kept in sync deliberately, not shared via a common helper,
-  // since _sections() builds carousel *widgets* directly while this needs
-  // the raw (key, label, opportunities) tuples to feed tabs + one shared
-  // grid instead). Mobile/tablet never call this — _sections() itself is
-  // completely untouched.
-  List<({String key, String label, List<Opportunity> opps})> _topics(List<Opportunity> opps, User? user) {
-    final roles = validRoles(user?.roles);
-    final topics = <({String key, String label, List<Opportunity> opps})>[];
-
-    if (roles.isEmpty) {
-      if (opps.isNotEmpty) topics.add((key: 'all', label: 'All jobs', opps: opps));
-      for (final dept in mockAllRoles) {
-        final inDept = opps.where((o) => o.category == dept).toList();
-        if (inDept.isNotEmpty) topics.add((key: dept, label: dept, opps: inDept));
-      }
-      return topics;
-    }
-
-    for (final role in roles) {
-      final inRole = opps.where((o) => o.category.toLowerCase() == role.toLowerCase()).toList();
-      if (inRole.isNotEmpty) topics.add((key: role, label: role, opps: inRole));
-    }
-
-    // Every other department as a tab after the user's own.
-    for (final dept in mockAllRoles) {
-      if (roles.contains(dept)) continue;
-      final inDept = opps.where((o) => o.category == dept).toList();
-      if (inDept.isNotEmpty) topics.add((key: dept, label: dept, opps: inDept));
-    }
-
-    return topics;
-  }
-
-  /// Desktop-only replacement for _sections()'s carousel-per-role view —
-  /// category tabs (real per-topic counts) + a real sort control (Best
-  /// match / Deadline soonest — no fabricated "Newest", Opportunity has no
-  /// posted-date field) above one shared 3-column grid, reusing the exact
-  /// same _rowsChunked mechanism the isFiltering branch already uses.
-  // Shared by the unfiltered tabs+grid view and the filtered flat-list view
-  // (see _groupedOppRows) so sort actually applies in both places — it used
-  // to only ever run here, which is exactly why sort silently did nothing
-  // once a facet filter (work mode/employment type/city) was applied.
+  // Used by the filtered flat-list view (see _groupedOppRows).
   List<Opportunity> _sortOpps(List<Opportunity> opps, User? user) {
     final sorted = List<Opportunity>.of(opps);
     if (_homeSort == 'deadline') {
@@ -386,57 +338,6 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
       sorted.sort((a, b) => scores[b.id]!.compareTo(scores[a.id]!));
     }
     return sorted;
-  }
-
-  Widget _desktopTopicGrid(BuildContext context, AppState appState, User? user, List<Opportunity> opps) {
-    final topics = _topics(opps, user);
-    if (topics.isEmpty) return const SizedBox.shrink();
-    final selectedKey = topics.any((t) => t.key == _selectedTopic) ? _selectedTopic! : topics.first.key;
-    final selected = topics.firstWhere((t) => t.key == selectedKey);
-
-    final sorted = _sortOpps(selected.opps, user);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, 0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: CategoryTabBar(
-                  tabs: [for (final t in topics) CategoryTab(key: t.key, label: t.label, count: t.opps.length)],
-                  selected: selectedKey,
-                  onSelected: (key) => setState(() => _selectedTopic = key),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.lg),
-              SortDropdown(
-                value: _homeSort,
-                options: const [('match', 'Best match'), ('deadline', 'Deadline soonest')],
-                onChanged: (v) => setState(() => _homeSort = v),
-              ),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, 0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            // 1 column, not 3 — OpportunityRow's title is maxLines:1, and 3
-            // narrow columns forced it to truncate hard ("Associate Product
-            // Mana…"), reading as cramped/messy. A full-width row per card
-            // (a real list) matches the reference mockup's actual structure
-            // and gives every title room to read in full.
-            children: [
-              ..._rowsChunked(context, appState, user, sorted.take(_rowLimit).toList(), 1),
-              _showMore(sorted.length),
-            ],
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _oppRow(BuildContext context, AppState appState, User? user, Opportunity o) {
@@ -935,13 +836,6 @@ class _CollegeFeedScreenState extends State<CollegeFeedScreen> {
                                 ],
                               ),
                             )
-                          else if (isTablet)
-                            // Desktop-only: category tabs + one shared grid,
-                            // replacing the carousel-per-role view below.
-                            // Mobile/tablet never reach this branch —
-                            // _sections() (the carousel view) is completely
-                            // unchanged and still the only thing they render.
-                            _desktopTopicGrid(context, appState, user, _opps)
                           else
                             // No manual top gap here — the first carousel's
                             // own CarouselSectionHeading already supplies a
