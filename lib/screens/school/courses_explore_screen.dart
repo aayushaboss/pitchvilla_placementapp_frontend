@@ -418,7 +418,12 @@ class _CoursesExploreScreenState extends State<CoursesExploreScreen> {
       } else {
         final carousels = [
           if (recommended.isNotEmpty) CourseCarouselSection(title: 'Recommended for you', courses: recommended),
-          for (final category in courseCategories) CourseCarouselSection(title: category, courses: filterCourses(category), visibleCap: 12),
+          for (final category in courseCategories) CourseCarouselSection(
+            title: category,
+            courses: filterCourses(category),
+            visibleCap: 12,
+            onViewAll: () => context.push('/courses/search?category=${Uri.encodeQueryComponent(category)}'),
+          ),
         ];
         bodyItems = [
           ..._headerItems(isSchool),

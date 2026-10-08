@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
@@ -18,10 +19,15 @@ class CarouselSectionHeading extends StatelessWidget {
   final String title;
   final int? count;
 
+  /// When set, a "View all" link sits at the right end of the heading row, so a
+  /// visitor can jump to the full list without scrolling to the trailing tile.
+  final VoidCallback? onViewAll;
+
   const CarouselSectionHeading({
     super.key,
     required this.title,
     this.count,
+    this.onViewAll,
   });
 
   @override
@@ -62,28 +68,58 @@ class CarouselSectionHeading extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
-                      Flexible(
-                        child: Text(
-                          title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.h3.copyWith(
-                            color: AppColors.ink,
-                            fontSize: 16,
-                            fontWeight: AppFontWeight.semibold,
-                          ),
+                      // Title + count take all the room the link leaves, so a long
+                      // department name shortens only when it truly cannot fit.
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.h3.copyWith(
+                                  color: AppColors.ink,
+                                  fontSize: 16,
+                                  fontWeight: AppFontWeight.semibold,
+                                ),
+                              ),
+                            ),
+                            if (count != null) ...[
+                              const SizedBox(width: AppSpacing.sm),
+                              Text(
+                                '($count)',
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.gray500,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
                       ),
-                      if (count != null) ...[
-                        const SizedBox(width: AppSpacing.sm),
-                        Text(
-                          '($count)',
-                          style: AppTextStyles.body.copyWith(
-                            color: AppColors.gray500,
-                            fontSize: 12,
+                      if (onViewAll != null)
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: onViewAll,
+                          child: Padding(
+                            // Padding inside the tap target: a full-size touch area.
+                            padding: const EdgeInsets.only(left: AppSpacing.md, top: AppSpacing.xs, bottom: AppSpacing.xs),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'View all',
+                                  style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 13, fontWeight: AppFontWeight.semibold),
+                                ),
+                                const SizedBox(width: AppSpacing.xs),
+                                const Icon(Ionicons.arrow_forward, size: 14, color: AppColors.ink),
+                              ],
+                            ),
                           ),
                         ),
-                      ],
                     ],
                   ),
                 ),

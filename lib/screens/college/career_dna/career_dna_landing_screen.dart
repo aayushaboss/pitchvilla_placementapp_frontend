@@ -15,6 +15,7 @@ import '../../../theme/spacing.dart';
 import '../../../theme/text_styles.dart';
 import '../../../utils/no_orphan.dart';
 import '../../../utils/scroll_to_top_registry.dart';
+import '../../../widgets/pill_button.dart';
 import '../../../widgets/responsive_body.dart';
 
 // Alternating horizontal position per node (center/right/center-left/left/
@@ -343,20 +344,24 @@ class _PathNode extends StatelessWidget {
 
     return Align(
       alignment: Alignment(xAlign, 0),
-      child: GestureDetector(
-        onTap: onTap,
-        child: Opacity(
+      // The level's tap lives on the circle and on the labels, NOT around the whole
+      // column: the (i) tooltip icon sits in that column, and when the node's tap
+      // wrapped it, a tap on the icon opened the level instead of showing the tooltip.
+      child: Opacity(
           opacity: locked ? 0.5 : 1.0,
           child: Column(
             children: [
               if (isCurrent)
-                Container(
-                  margin: const EdgeInsets.only(bottom: AppSpacing.xs),
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-                  decoration: BoxDecoration(color: AppColors.brand, borderRadius: BorderRadius.circular(AppRadius.pill)),
-                  child: Text('START', style: AppTextStyles.label.copyWith(color: AppColors.ink, fontSize: 12, fontWeight: AppFontWeight.bold, letterSpacing: 0.6)),
+                GestureDetector(
+                  onTap: onTap,
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.xs),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+                    decoration: BoxDecoration(color: AppColors.brand, borderRadius: BorderRadius.circular(AppRadius.pill)),
+                    child: Text('START', style: AppTextStyles.label.copyWith(color: AppColors.ink, fontSize: 12, fontWeight: AppFontWeight.bold, letterSpacing: 0.6)),
+                  ),
                 ),
-              circle,
+              GestureDetector(onTap: onTap, child: circle),
               // Shows the level's title beneath its number on every node
               // (not just the current one) — per direct feedback that
               // tapping a completed level jumped straight to its report
@@ -380,26 +385,39 @@ class _PathNode extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text(
-                            'Level ${meta.level}',
-                            style: AppTextStyles.caption.copyWith(color: AppColors.ink, fontSize: 12, fontWeight: AppFontWeight.semibold),
+                          GestureDetector(
+                            onTap: onTap,
+                            child: Text(
+                              'Level ${meta.level}',
+                              style: AppTextStyles.caption.copyWith(color: AppColors.ink, fontSize: 12, fontWeight: AppFontWeight.semibold),
+                            ),
                           ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Tooltip(
-                            message: meta.whatThisMeasures,
-                            triggerMode: TooltipTriggerMode.tap,
-                            child: const Icon(Ionicons.information_circle_outline, size: 13, color: AppColors.gray400),
+                          // Tap the (i) for what the level measures. It opens a small card
+                          // that stays until closed (a Tooltip faded away before it could be
+                          // read, and was hard to trigger on an unlocked level). The padding
+                          // makes the tap target about 36x28 instead of the 14px icon.
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () => _showLevelInfo(context, meta),
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+                              child: Icon(Ionicons.information_circle_outline, size: 14, color: AppColors.gray500),
+                            ),
                           ),
                         ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.only(top: AppSpacing.xs),
-                        child: Text(
-                          meta.title,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12, height: 1.25),
+                      GestureDetector(
+                        onTap: onTap,
+                        behavior: HitTestBehavior.opaque,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: AppSpacing.xs),
+                          child: Text(
+                            meta.title,
+                            textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12, height: 1.25),
+                          ),
                         ),
                       ),
                     ],
@@ -409,7 +427,47 @@ class _PathNode extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
+}
+
+/// "What this level measures", as a card that stays until the student closes it.
+void _showLevelInfo(BuildContext context, CareerDnaLevelMeta meta) {
+  showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: AppColors.white,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.xl))),
+    builder: (sheetContext) => Padding(
+      padding: EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, MediaQuery.of(sheetContext).padding.bottom + AppSpacing.lg),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: AppSpacing.xxl,
+              height: AppSpacing.xs,
+              decoration: BoxDecoration(color: AppColors.gray200, borderRadius: BorderRadius.circular(AppRadius.pill)),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.lg),
+            child: Text(
+              'Level ${meta.level} · ${meta.title}',
+              style: AppTextStyles.h3.copyWith(color: AppColors.ink, fontWeight: AppFontWeight.bold),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.lg),
+            child: Text(
+              noOrphan(meta.whatThisMeasures),
+              style: AppTextStyles.body.copyWith(color: AppColors.gray500, fontSize: 14, height: 1.5),
+            ),
+          ),
+          PillButton(label: 'Got it', onPressed: () => Navigator.of(sheetContext).pop()),
+        ],
+      ),
+    ),
+  );
 }

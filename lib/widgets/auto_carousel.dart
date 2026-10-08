@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../theme/colors.dart';
+import '../theme/shadows.dart';
 import '../theme/spacing.dart';
 
 /// Auto-advancing carousel with dot indicators, looping in one direction
@@ -49,7 +50,7 @@ class AutoCarousel extends StatefulWidget {
     // flush with zero gap, so with the whole xl inset applied only once,
     // outside the PageView, cards had no separation of their own and
     // visibly merged into each other mid-slide.
-    this.padding = const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+    this.padding = const EdgeInsets.symmetric(horizontal: AppSpacing.md),
   });
 
   @override
@@ -111,7 +112,13 @@ class _AutoCarouselState extends State<AutoCarousel> {
           padding: widget.padding,
           child: SizedBox(
             height: widget.height,
-            child: PageView.builder(
+            // A PageView hard-clips to its box, which cut the card shadow flat along the
+            // top and bottom edges of the yellow cards. Clipping only the sides (the
+            // next page must not show) and letting the shadow paint above and below fixes it.
+            child: ClipRect(
+              clipper: const _SideClipper(AppShadows.cardBuffer),
+              child: PageView.builder(
+              clipBehavior: Clip.none,
               controller: _controller,
               // Bounded to _count when there's nothing to loop (0 or 1
               // cards) so this behaves as a plain, non-scrolling single
@@ -126,9 +133,10 @@ class _AutoCarouselState extends State<AutoCarousel> {
                 // boundary, so a mid-slide transition shows a real ~12px
                 // gap between outgoing and incoming cards instead of them
                 // touching.
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                 child: widget.cards[i % _count],
               ),
+            ),
             ),
           ),
         ),
@@ -150,4 +158,17 @@ class _AutoCarouselState extends State<AutoCarousel> {
       ],
     );
   }
+}
+
+/// Clips to the carousel's width but extends [vertical] pixels above and below,
+/// so a card's drop shadow is not cut off at the PageView's edge.
+class _SideClipper extends CustomClipper<Rect> {
+  final double vertical;
+  const _SideClipper(this.vertical);
+
+  @override
+  Rect getClip(Size size) => Rect.fromLTRB(0, -vertical, size.width, size.height + vertical);
+
+  @override
+  bool shouldReclip(_SideClipper oldClipper) => oldClipper.vertical != vertical;
 }

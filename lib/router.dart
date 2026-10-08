@@ -258,7 +258,13 @@ GoRouter buildRouter(AppState appState, GlobalKey<ScaffoldMessengerState> scaffo
           );
         },
       ),
-      GoRoute(path: '/courses/search', builder: (context, state) => CourseSearchResultsScreen(query: state.uri.queryParameters['q'] ?? '')),
+      GoRoute(
+        path: '/courses/search',
+        builder: (context, state) => CourseSearchResultsScreen(
+          query: state.uri.queryParameters['q'] ?? '',
+          category: state.uri.queryParameters['category'],
+        ),
+      ),
       GoRoute(path: '/application/:id', builder: (context, state) => ApplicationDetailScreen(id: state.pathParameters['id']!)),
       GoRoute(path: '/applications/recently-deleted', builder: (context, state) => const RecentlyDeletedApplicationsScreen()),
       GoRoute(path: '/course/:id', builder: (context, state) => CourseDetailScreen(id: state.pathParameters['id']!)),

@@ -19,12 +19,15 @@ import '../../widgets/responsive_body.dart';
 /// lands here to see "N courses found" and scroll the results.
 class CourseSearchResultsScreen extends StatelessWidget {
   final String query;
-  const CourseSearchResultsScreen({super.key, required this.query});
+
+  /// When set, lists exactly that department (used by a row's "View all").
+  final String? category;
+  const CourseSearchResultsScreen({super.key, required this.query, this.category});
 
   @override
   Widget build(BuildContext context) {
     final trimmed = query.trim();
-    final results = filterCoursesAdvanced(query: trimmed);
+    final results = filterCoursesAdvanced(categories: category == null ? const [] : [category!], query: trimmed);
     final isTablet = AppBreakpoints.of(context) == AppBreakpoint.tablet;
     final columns = MediaQuery.sizeOf(context).width >= AppBreakpoints.tablet ? 2 : 1;
 
@@ -43,7 +46,7 @@ class CourseSearchResultsScreen extends StatelessWidget {
         maxWidth: isTablet ? 1200 : 720,
         child: Column(
           children: [
-            PageHeaderBar(title: '"$trimmed"', onBack: () => context.canPop() ? context.pop() : context.go('/tabs')),
+            PageHeaderBar(title: category ?? '"$trimmed"', onBack: () => context.canPop() ? context.pop() : context.go('/tabs')),
             Padding(
               padding: const EdgeInsets.fromLTRB(AppSpacing.xl, AppSpacing.lg, AppSpacing.xl, AppSpacing.sm),
               child: Align(

@@ -9,7 +9,6 @@ import '../../nav.dart';
 import '../../state/app_state.dart';
 import '../../theme/breakpoints.dart';
 import '../../theme/colors.dart';
-import '../../theme/shadows.dart';
 import '../../theme/spacing.dart';
 import '../../theme/text_styles.dart';
 import '../../widgets/brand.dart';
@@ -18,16 +17,10 @@ import '../../widgets/responsive_body.dart';
 
 const _heroImage = 'assets/images/landing-hero.png';
 
-/// Single landing + auth screen — replaces the old value-slides carousel,
-/// segment picker, and the first half of the old profile quiz all at once.
-/// One hero, a 2-line headline, two proof points (10,000+ startups, 50+
-/// unicorns), Google/Phone auth and a "Powered by Pitchvilla" line, all on one
-/// screen instead of three.
-///
-/// Full-bleed hero blending into the content below via a gradient scrim,
-/// instead of a photo floating as a rounded card on a flat color field —
-/// the "card pasted onto a background with a big empty gap under it" read
-/// as unfinished rather than designed.
+/// The first screen after the splash: a large photo with just the logo on it, the
+/// headline, one small label line for the proof points (10,000+ startups, 50+
+/// unicorns), then the sign-in buttons. The network tagline and "Powered by
+/// Pitchvilla" are the quietest text at the bottom. Nothing else.
 class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
 
@@ -35,8 +28,18 @@ class LandingScreen extends StatefulWidget {
   State<LandingScreen> createState() => _LandingScreenState();
 }
 
-class _LandingScreenState extends State<LandingScreen> {
+class _LandingScreenState extends State<LandingScreen> with SingleTickerProviderStateMixin {
   bool _googleLoading = false;
+
+  // One controller drives the whole entrance: logo, badges, job card, headline
+  // and buttons each fade and rise during their own slice of it.
+  late final AnimationController _intro = AnimationController(vsync: this, duration: const Duration(milliseconds: 1500))..forward();
+
+  @override
+  void dispose() {
+    _intro.dispose();
+    super.dispose();
+  }
 
   Future<void> _continueWithGoogle() async {
     if (_googleLoading) return;
@@ -87,165 +90,154 @@ class _LandingScreenState extends State<LandingScreen> {
     final topInset = MediaQuery.of(context).padding.top;
     final bottomInset = MediaQuery.of(context).padding.bottom;
     final screenHeight = MediaQuery.of(context).size.height;
-    final isTablet = AppBreakpoints.of(context) == AppBreakpoint.tablet;
+    // Half the screen, but never so tall that the buttons and footer get pushed off a short one.
+    final heroHeight = (screenHeight * 0.50).clamp(230.0, 470.0).clamp(0.0, (screenHeight - 370).clamp(200.0, 470.0));
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: AppColors.white,
-        // Hero sits outside ResponsiveBody so it stays a true full-bleed banner
-        // on wide browsers; only the content below is width-capped.
         body: Column(
           children: [
-            // Shorter than before (it was 46% of the screen) so the headline, the
-            // proof points, both sign-in buttons and the "Powered by" line all
-            // fit on one phone screen without crowding.
+            // Full-bleed photo with rounded bottom corners, outside ResponsiveBody so it
+            // stays edge to edge on wide browsers. Just the logo on it: nothing else
+            // competes with the photo.
             SizedBox(
-              height: (screenHeight * 0.40).clamp(200.0, 380.0),
+              height: heroHeight,
               width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.asset(_heroImage, fit: BoxFit.cover, alignment: const Alignment(0, -0.35)),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [Colors.transparent, AppColors.white],
-                        stops: [0.55, 1.0],
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(36)),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(_heroImage, fit: BoxFit.cover, alignment: const Alignment(0, -0.4)),
+                    Positioned(
+                      top: topInset + AppSpacing.md,
+                      left: AppSpacing.lg,
+                      child: _Reveal(
+                        animation: _intro,
+                        from: 0.0,
+                        to: 0.45,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+                          decoration: BoxDecoration(color: AppColors.white, borderRadius: BorderRadius.circular(AppRadius.pill)),
+                          child: const Wordmark(size: 18),
+                        ),
                       ),
                     ),
-                  ),
-                  // Covers the 1-2px antialiasing seam where the photo's last
-                  // row meets the white panel below it.
-                  const Positioned(left: 0, right: 0, bottom: 0, height: 2, child: ColoredBox(color: AppColors.white)),
-                  // Logo lives on a white pill so it stays legible over the photo.
-                  Positioned(
-                    top: topInset + AppSpacing.md,
-                    left: AppSpacing.xl,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-                      decoration: BoxDecoration(
-                        color: AppColors.white,
-                        borderRadius: BorderRadius.circular(AppRadius.pill),
-                        boxShadow: AppShadows.soft,
-                      ),
-                      child: const Wordmark(size: 18),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             Expanded(
               child: ResponsiveBody(
-                maxWidth: isTablet ? 1224 : AppBreakpoints.maxContentWidth,
-                // Scrolls only if a very small screen cannot fit everything;
-                // otherwise the content fills the height and "Powered by" sits
-                // at the bottom.
+                maxWidth: AppBreakpoints.maxContentWidth,
+                // Scrolls only if a very small screen cannot fit everything.
                 child: CustomScrollView(
                   physics: const ClampingScrollPhysics(),
                   slivers: [
                     SliverFillRemaining(
                       hasScrollBody: false,
                       child: Padding(
-                        padding: EdgeInsets.fromLTRB(AppSpacing.xl, 0, AppSpacing.xl, bottomInset + AppSpacing.md),
+                        padding: EdgeInsets.fromLTRB(AppSpacing.lg, AppSpacing.lg, AppSpacing.lg, bottomInset + AppSpacing.md),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              "INDIA'S STARTUP TALENT NETWORK",
-                              style: AppTextStyles.caption.copyWith(
-                                color: AppColors.gray500,
-                                fontSize: 11,
-                                letterSpacing: 1.4,
-                                fontWeight: AppFontWeight.semibold,
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: AppSpacing.sm),
+                            // Tier 1, the only loud text on the screen.
+                            _Reveal(
+                              animation: _intro,
+                              from: 0.25,
+                              to: 0.65,
                               child: Text(
-                                // Manual break at a natural word boundary so no
-                                // word is orphaned on its own line.
+                                // Manual break at a natural word boundary so no word is
+                                // orphaned on its own line.
                                 "Get hired by India's\ntop startups",
-                                // Deliberate exception to the app-wide "cap at
-                                // semibold" rule: the one marketing headline.
-                                style: AppTextStyles.h1.copyWith(color: AppColors.ink, fontSize: 30, fontWeight: AppFontWeight.extrabold, height: 34 / 30),
+                                // Deliberate exception to the app-wide "cap at semibold"
+                                // rule: the one marketing headline.
+                                style: AppTextStyles.h1.copyWith(color: AppColors.ink, fontSize: 32, fontWeight: AppFontWeight.extrabold, height: 36 / 32),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: AppSpacing.sm),
-                              child: Text(
-                                'Internships and full-time jobs.',
-                                style: AppTextStyles.bodyLg.copyWith(color: AppColors.gray500, fontSize: 16),
+                            // The numbers sit directly under the headline as a small label line
+                            // (bold numerals, tiny caps labels): clearly secondary to it.
+                            _Reveal(
+                              animation: _intro,
+                              from: 0.35,
+                              to: 0.75,
+                              child: const Padding(
+                                padding: EdgeInsets.only(top: AppSpacing.md),
+                                child: _ProofLine(),
                               ),
                             ),
                             const SizedBox(height: AppSpacing.lg),
-                            const _ProofCard(),
                             const Spacer(),
-                            const SizedBox(height: AppSpacing.lg),
-                            PillButton(
-                              label: 'Continue with Google',
-                              // Google's "G" has its own yellow segment, which
-                              // vanishes against the yellow CTA: a white badge
-                              // behind it keeps the mark legible.
-                              iconWidget: Container(
-                                decoration: const BoxDecoration(color: AppColors.white, shape: BoxShape.circle),
-                                padding: const EdgeInsets.all(AppSpacing.xs),
-                                child: SvgPicture.asset('assets/icons/google.svg'),
-                              ),
-                              loading: _googleLoading,
-                              onPressed: _continueWithGoogle,
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(top: AppSpacing.md),
-                              child: PillButton(
-                                label: 'Continue with Phone Number',
-                                variant: PillVariant.secondary,
-                                icon: Ionicons.call_outline,
-                                disabled: _googleLoading,
-                                onPressed: _continueWithPhone,
-                              ),
-                            ),
-                            Center(
-                              child: GestureDetector(
-                                onTap: _goToReturningLogin,
-                                // Padding lives inside the tap target, not just
-                                // around it, so it is a full-size touch target.
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.md),
-                                  child: Text.rich(
-                                    TextSpan(
-                                      style: AppTextStyles.body.copyWith(color: AppColors.gray500, fontSize: 14, fontWeight: AppFontWeight.medium),
-                                      children: [
-                                        const TextSpan(text: 'Already have an account? '),
-                                        TextSpan(
-                                          text: 'Log in',
-                                          style: AppTextStyles.body.copyWith(
-                                            color: AppColors.ink,
-                                            fontSize: 14,
-                                            fontWeight: AppFontWeight.semibold,
-                                          ),
-                                        ),
-                                      ],
+                            _Reveal(
+                              animation: _intro,
+                              from: 0.45,
+                              to: 0.85,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  PillButton(
+                                    label: 'Continue with Google',
+                                    // Google's "G" has its own yellow segment, which vanishes
+                                    // against the yellow CTA: a white badge keeps it legible.
+                                    iconWidget: Container(
+                                      decoration: const BoxDecoration(color: AppColors.white, shape: BoxShape.circle),
+                                      padding: const EdgeInsets.all(AppSpacing.xs),
+                                      child: SvgPicture.asset('assets/icons/google.svg'),
+                                    ),
+                                    loading: _googleLoading,
+                                    onPressed: _continueWithGoogle,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: AppSpacing.md),
+                                    child: PillButton(
+                                      label: 'Continue with Phone Number',
+                                      variant: PillVariant.secondary,
+                                      icon: Ionicons.call_outline,
+                                      disabled: _googleLoading,
+                                      onPressed: _continueWithPhone,
                                     ),
                                   ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: AppSpacing.xs),
-                            Center(
-                              child: Text.rich(
-                                TextSpan(
-                                  style: AppTextStyles.caption.copyWith(color: AppColors.gray400, fontSize: 12),
-                                  children: [
-                                    const TextSpan(text: 'Powered by '),
-                                    TextSpan(
-                                      text: 'Pitchvilla',
-                                      style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 12, fontWeight: AppFontWeight.semibold),
+                                  Center(
+                                    child: GestureDetector(
+                                      onTap: _goToReturningLogin,
+                                      // Padding lives inside the tap target, so it is a
+                                      // full-size touch target.
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.md),
+                                        child: Text.rich(
+                                          TextSpan(
+                                            style: AppTextStyles.body.copyWith(color: AppColors.gray500, fontSize: 14, fontWeight: AppFontWeight.medium),
+                                            children: [
+                                              const TextSpan(text: 'Already have an account? '),
+                                              TextSpan(
+                                                text: 'Log in',
+                                                style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 14, fontWeight: AppFontWeight.semibold),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  // Quietest text on the page: the network tagline and credit.
+                                  Center(
+                                    child: Text.rich(
+                                      textAlign: TextAlign.center,
+                                      TextSpan(
+                                        style: AppTextStyles.caption.copyWith(color: AppColors.gray400, fontSize: 11, height: 1.5),
+                                        children: [
+                                          const TextSpan(text: "India's Startup Talent Network\nPowered by "),
+                                          TextSpan(
+                                            text: 'Pitchvilla',
+                                            style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 11, fontWeight: AppFontWeight.semibold, height: 1.5),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -263,56 +255,52 @@ class _LandingScreenState extends State<LandingScreen> {
   }
 }
 
-/// The two proof points, side by side on a soft card: big numerals, small
-/// spaced-out labels. White-dominant (no yellow wash), numbers carry the weight.
-class _ProofCard extends StatelessWidget {
-  const _ProofCard();
+/// Fades and rises into place during part of the intro animation.
+class _Reveal extends StatelessWidget {
+  final Animation<double> animation;
+  final double from;
+  final double to;
+  final Widget child;
+
+  const _Reveal({required this.animation, required this.from, required this.to, required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md + 2),
-      decoration: BoxDecoration(color: AppColors.offWhite, borderRadius: BorderRadius.circular(AppRadius.lg)),
-      child: const IntrinsicHeight(
-        child: Row(
-          children: [
-            Expanded(child: _Stat(value: '10,000+', label: 'STARTUPS')),
-            VerticalDivider(width: 1, thickness: 1, color: AppColors.gray100),
-            Expanded(child: _Stat(value: '50+', label: 'UNICORNS')),
-          ],
-        ),
+    final curved = CurvedAnimation(parent: animation, curve: Interval(from, to, curve: Curves.easeOutCubic));
+    return FadeTransition(
+      opacity: curved,
+      child: AnimatedBuilder(
+        animation: curved,
+        builder: (context, child) => Transform.translate(offset: Offset(0, (1 - curved.value) * 14), child: child),
+        child: child,
       ),
     );
   }
 }
 
-class _Stat extends StatelessWidget {
-  final String value;
-  final String label;
-  const _Stat({required this.value, required this.label});
+/// "10,000+ STARTUPS   50+ UNICORNS" as a small label line: bold numerals, tiny
+/// spaced-out caps labels. Deliberately small and light so it never rivals the headline.
+class _ProofLine extends StatelessWidget {
+  const _ProofLine();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Never wraps: shrinks a touch on a very narrow screen instead.
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(
-            value,
-            maxLines: 1,
-            softWrap: false,
-            style: AppTextStyles.h1.copyWith(color: AppColors.ink, fontSize: 28, fontWeight: AppFontWeight.extrabold, height: 1.1),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.xs),
-        Text(
-          label,
-          style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 11, letterSpacing: 1.4, fontWeight: AppFontWeight.semibold),
-        ),
-      ],
+    TextSpan stat(String value, String label) => TextSpan(
+          children: [
+            TextSpan(text: value, style: AppTextStyles.body.copyWith(color: AppColors.ink, fontSize: 14, fontWeight: AppFontWeight.bold)),
+            TextSpan(text: '  $label', style: AppTextStyles.caption.copyWith(color: AppColors.gray500, fontSize: 11, letterSpacing: 1.2, fontWeight: AppFontWeight.medium)),
+          ],
+        );
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text.rich(
+        TextSpan(children: [
+          stat('10,000+', 'STARTUPS'),
+          TextSpan(text: '      ', style: AppTextStyles.caption.copyWith(fontSize: 11)),
+          stat('50+', 'UNICORNS'),
+        ]),
+        maxLines: 1,
+      ),
     );
   }
 }
