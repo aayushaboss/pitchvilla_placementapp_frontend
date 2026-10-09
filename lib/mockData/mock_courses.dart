@@ -5,6 +5,7 @@
 // assets/data/courses.json by catalog_loader.dart before the app starts; this
 // file keeps the synchronous accessors the screens have always used.
 import '../models/course.dart';
+import '../utils/search_match.dart';
 import '../models/opportunity.dart';
 
 List<Course> _courses = const [];
@@ -70,11 +71,11 @@ List<Course> filterCoursesAdvanced({
   List<String> durationBuckets = const [],
   String? query,
 }) {
-  final q = query?.trim().toLowerCase();
+  final tokens = searchTokens(query);
   return mockCourses.where((c) {
     if (categories.isNotEmpty && !categories.contains(c.category)) return false;
     if (durationBuckets.isNotEmpty && !durationBuckets.any((b) => _matchesDurationBucket(c, b))) return false;
-    if (q != null && q.isNotEmpty && !c.title.toLowerCase().contains(q) && !c.category.toLowerCase().contains(q)) return false;
+    if (tokens.isNotEmpty && !matchesAllTokens(tokens, [c.title, c.category])) return false;
     return true;
   }).toList();
 }

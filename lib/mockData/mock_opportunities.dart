@@ -5,6 +5,7 @@
 // catalog_loader.dart before the app starts; this file keeps the same
 // synchronous accessors the screens have always used.
 import '../models/opportunity.dart';
+import '../utils/search_match.dart';
 
 List<Opportunity> _opportunities = const [];
 Map<String, Opportunity> _byId = const {};
@@ -17,6 +18,12 @@ void installOpportunities(List<Opportunity> items) {
   _opportunities = List.unmodifiable(items);
   _byId = {for (final o in items) o.id: o};
 }
+
+/// What a search looks at, most important first.
+List<String> _searchFields(Opportunity o) => [o.title, o.company, o.category, o.sector, o.location, o.type, o.workMode, o.employmentType ?? ''];
+
+/// How well [o] answers [query]; higher is better. Used to put the best results first.
+int searchRelevance(Opportunity o, String query) => searchScore(searchTokens(query), _searchFields(o));
 
 List<Opportunity> filterOpportunities({
   String? type,
@@ -61,15 +68,11 @@ List<Opportunity> filterOpportunities({
       items = items.where((o) => wanted.any((c) => o.location.toLowerCase().contains(c))).toList();
     }
   }
-  final q = query?.trim().toLowerCase();
-  if (q != null && q.isNotEmpty) {
-    items = items.where((o) {
-      return o.title.toLowerCase().contains(q) ||
-          o.company.toLowerCase().contains(q) ||
-          o.category.toLowerCase().contains(q) ||
-          o.sector.toLowerCase().contains(q) ||
-          o.location.toLowerCase().contains(q);
-    }).toList();
+  // Word by word, in any order: "marketing intern mumbai" finds a Marketing Intern job in
+  // Mumbai, instead of looking for that exact phrase inside one field.
+  final tokens = searchTokens(query);
+  if (tokens.isNotEmpty) {
+    items = items.where((o) => matchesAllTokens(tokens, _searchFields(o))).toList();
   }
   // Always hand back a fresh, independently-sortable copy — callers must
   // never be able to mutate the shared mockOpportunities order in place.

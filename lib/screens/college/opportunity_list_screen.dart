@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../data/repositories.dart';
+import '../../mockData/mock_opportunities.dart';
 import '../../models/opportunity.dart';
 import '../../models/opportunity_match.dart';
 import '../../models/user.dart';
@@ -63,7 +64,16 @@ class _OpportunityListScreenState extends State<OpportunityListScreen> {
       query: hasQuery ? widget.query : null,
       categories: (hasQuery || widget.category == null) ? null : [widget.category!],
     );
-    results.sort((a, b) => b.matchScoreFor(user).compareTo(a.matchScoreFor(user)));
+    // A search puts the closest answers first (title hits before company or city hits), then
+    // the best profile match; a plain list is just by profile match.
+    final q = hasQuery ? widget.query! : null;
+    results.sort((a, b) {
+      if (q != null) {
+        final byRelevance = searchRelevance(b, q).compareTo(searchRelevance(a, q));
+        if (byRelevance != 0) return byRelevance;
+      }
+      return b.matchScoreFor(user).compareTo(a.matchScoreFor(user));
+    });
     return results;
   }
 

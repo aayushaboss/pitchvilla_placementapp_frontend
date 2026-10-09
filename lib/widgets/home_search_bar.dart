@@ -10,6 +10,7 @@ import '../theme/colors.dart';
 import '../theme/shadows.dart';
 import '../theme/spacing.dart';
 import '../theme/text_styles.dart';
+import '../utils/search_match.dart';
 
 const _recentSearchesKey = 'recent_opportunity_searches';
 const _maxRecentSearches = 5;
@@ -161,7 +162,15 @@ class _HomeSearchBarState extends State<HomeSearchBar> {
     final typed = _controller.text.trim();
     if (typed.isNotEmpty) {
       final q = typed.toLowerCase();
-      final matches = _terms.where((t) => t.toLowerCase().contains(q)).take(6).toList();
+      final tokens = searchTokens(typed);
+      // Every typed word must be in the suggestion; ones that start with what was typed come first.
+      final matching = _terms.where((t) => matchesAllTokens(tokens, [t])).toList()
+        ..sort((a, b) {
+          final aStarts = a.toLowerCase().startsWith(q) ? 0 : 1;
+          final bStarts = b.toLowerCase().startsWith(q) ? 0 : 1;
+          return aStarts != bStarts ? aStarts.compareTo(bStarts) : a.length.compareTo(b.length);
+        });
+      final matches = matching.take(6).toList();
       final rows = matches.map((m) => _Suggestion(m, Ionicons.search_outline, () => _submit(m))).toList();
       if (!matches.any((m) => m.toLowerCase() == q)) {
         rows.insert(0, _Suggestion('Search "$typed"', Ionicons.search_outline, () => _submit(typed)));
