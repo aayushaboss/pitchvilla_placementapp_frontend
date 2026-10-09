@@ -153,7 +153,11 @@ class _CareerDnaLandingScreenState extends State<CareerDnaLandingScreen> {
               maxWidth: isTablet ? 1224 : AppBreakpoints.maxContentWidth,
               child: Padding(
                 padding: EdgeInsets.fromLTRB(AppSpacing.xl, topInset + AppSpacing.lg, AppSpacing.xl, AppSpacing.xl),
-                child: Column(
+                // Full width, so on a tablet the heading lines up with the content below it. Without
+                // this the column shrinks to its widest line and ResponsiveBody centres it.
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // The heading always reads "Career Quiz", regardless of
@@ -183,6 +187,7 @@ class _CareerDnaLandingScreenState extends State<CareerDnaLandingScreen> {
                       ),
                     ),
                   ],
+                ),
                 ),
               ),
             ),

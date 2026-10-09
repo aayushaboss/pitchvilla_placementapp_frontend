@@ -143,13 +143,13 @@ class _OtpScreenState extends State<OtpScreen> with SingleTickerProviderStateMix
     // Same identifier already used to send the code — an email sign-in
     // should never be told to "verify your number".
     final isEmail = widget.identifier.contains('@');
-    final isTablet = AppBreakpoints.of(context) == AppBreakpoint.tablet;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: AppColors.white,
-        body: ResponsiveBody(maxWidth: isTablet ? 1224 : AppBreakpoints.maxContentWidth, child: Stack(
+        // The six code boxes spread edge to edge, so keep this a phone-width column on a tablet.
+        body: ResponsiveBody(maxWidth: AppBreakpoints.maxContentWidth, child: Stack(
           children: [
             Positioned(
               left: AppSpacing.lg,

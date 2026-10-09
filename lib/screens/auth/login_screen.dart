@@ -101,6 +101,10 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
+  /// On a phone the heading area takes the spare height (pushing the form to the bottom);
+  /// on a tablet it just takes the height it needs.
+  Widget _fillOnPhone(bool tablet, Widget child) => tablet ? child : Expanded(child: child);
+
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).padding.bottom;
@@ -112,11 +116,16 @@ class _LoginScreenState extends State<LoginScreen> {
       child: Scaffold(
         backgroundColor: AppColors.white,
         resizeToAvoidBottomInset: true,
-        body: ResponsiveBody(maxWidth: isTablet ? 1224 : AppBreakpoints.maxContentWidth, child: Column(
+        // A phone-width column on a tablet, centred on the page. On a phone the heading sits at
+        // the top and the form is pinned to the bottom; on a tablet that would leave a huge
+        // empty gap between them, so heading and form stay together in the middle.
+        body: ResponsiveBody(maxWidth: AppBreakpoints.maxContentWidth, child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: isTablet ? MainAxisAlignment.center : MainAxisAlignment.start,
           children: [
-            Expanded(
-              child: Align(
+            _fillOnPhone(
+              isTablet,
+              Align(
                 alignment: Alignment.topLeft,
                 child: Padding(
                   padding: EdgeInsets.fromLTRB(AppSpacing.xl, topInset + AppSpacing.xxl, AppSpacing.xl, AppSpacing.xxl),

@@ -340,7 +340,8 @@ class _BookingScreenState extends State<BookingScreen> {
                   _Section(
                     title: 'Pick a date',
                     child: SizedBox(
-                      height: 84,
+                      // Tall enough for the three lines of text plus padding and border (84 overflowed by 15px).
+                      height: 100,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: _days.length,
