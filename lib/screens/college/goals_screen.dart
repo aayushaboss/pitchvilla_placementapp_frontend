@@ -11,12 +11,12 @@ import '../../models/user.dart';
 import '../../state/app_state.dart';
 import '../../theme/breakpoints.dart';
 import '../../theme/colors.dart';
-import '../../theme/shadows.dart';
 import '../../theme/spacing.dart';
 import '../../theme/text_styles.dart';
 import '../../utils/no_orphan.dart';
 import '../../widgets/app_chip.dart';
 import '../../widgets/back_chevron.dart';
+import '../../widgets/onboarding_progress.dart';
 import '../../widgets/pill_button.dart';
 import '../../widgets/pill_input.dart';
 import '../../widgets/responsive_body.dart';
@@ -43,7 +43,9 @@ const _goals = [
 /// Equal cards: reserve 2 lines for title + subtitle at full type size (no scale-down).
 const _goalTitleHeight = 14.0 * 1.25 * 2;
 const _goalSubHeight = 13.0 * 1.3 * 2;
-const _goalCardHeight = AppSpacing.lg * 2 +
+/// Includes the 2px border on each side, which takes room inside the box.
+const _goalCardHeight = 4 +
+    AppSpacing.lg * 2 +
     44 +
     AppSpacing.sm +
     _goalTitleHeight +
@@ -183,17 +185,25 @@ class _GoalsScreenState extends State<GoalsScreen> {
         backgroundColor: AppColors.white,
         body: ResponsiveBody(maxWidth: isTablet ? 1224 : AppBreakpoints.maxContentWidth, child: Column(
           children: [
+            // During onboarding the back arrow and the progress bar stay fixed at the top, the
+            // same header as the profile step. Later edits from the Profile tab have no steps.
+            if (!_postOnboarding)
+              Padding(
+                padding: EdgeInsets.fromLTRB(AppSpacing.xl, topInset + AppSpacing.lg, AppSpacing.xl, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const BackChevron(color: AppColors.ink, fallbackRoute: '/onboarding/profile'),
+                    const SizedBox(height: AppSpacing.sm),
+                    OnboardingProgress(step: 2, totalSteps: 2, stepFill: ((_goal.isNotEmpty ? 1 : 0) + (_selectedRoles.isNotEmpty ? 1 : 0)) / 2),
+                  ],
+                ),
+              ),
             Expanded(
               child: ListView(
-                padding: EdgeInsets.fromLTRB(AppSpacing.xl, topInset + AppSpacing.lg, AppSpacing.xl, AppSpacing.xl),
+                padding: EdgeInsets.fromLTRB(AppSpacing.xl, _postOnboarding ? topInset + AppSpacing.lg : AppSpacing.lg, AppSpacing.xl, AppSpacing.xl),
                 children: [
-                  BackChevron(color: AppColors.ink, fallbackRoute: _postOnboarding ? '/tabs' : '/onboarding/profile'),
-                  // No "STEP 2 OF 2" label here any more — it undercounted
-                  // the real flow (Login/OTP/Profile already happened by
-                  // the time someone reaches this screen), which read as
-                  // either a bug or a bait-and-switch. Nothing else in the
-                  // flow has a comparable global step count to be
-                  // consistent with, so removing it beats a misleading one.
+                  if (_postOnboarding) const BackChevron(color: AppColors.ink, fallbackRoute: '/tabs'),
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.lg),
                     child: Text(
@@ -231,11 +241,12 @@ class _GoalsScreenState extends State<GoalsScreen> {
                                   decoration: BoxDecoration(
                                     color: selected ? AppColors.white : AppColors.offWhite,
                                     borderRadius: BorderRadius.circular(AppRadius.xl),
+                                    // No drop shadow on the gray tiles: a blurred shadow made their
+                                    // edge look fuzzy. The edge is the crisp fill against white.
                                     border: Border.all(
-                                      color: selected ? AppColors.brand : Colors.transparent,
+                                      color: selected ? AppColors.brand : AppColors.offWhite,
                                       width: 2,
                                     ),
-                                    boxShadow: selected ? null : AppShadows.soft,
                                   ),
                                   child: Column(
                                     children: [

@@ -16,17 +16,19 @@ import '../../widgets/app_chip.dart';
 import '../../widgets/autocomplete_field.dart';
 import '../../widgets/desktop_field_row.dart';
 import '../../widgets/field_label.dart';
+import '../../widgets/onboarding_progress.dart';
 import '../../widgets/pill_button.dart';
 import '../../widgets/pill_input.dart';
 import '../../widgets/responsive_body.dart';
 
 const _qualificationOptions = ['Below 10th', '10th pass', '12th pass', 'Diploma', 'Graduate', 'Postgraduate'];
 
+/// (segment, title, one-line description, icon) for the "which best describes you" cards.
 const _segmentOptions = [
-  (Segment.school, 'School'),
-  (Segment.ug, 'Undergraduate'),
-  (Segment.pg, 'Postgraduate'),
-  (Segment.working, 'Working'),
+  (Segment.school, 'School student', 'Studying in school', Ionicons.school_outline),
+  (Segment.ug, 'Undergraduate', "Diploma or bachelor's", Ionicons.book_outline),
+  (Segment.pg, 'Postgraduate', "Master's degree", Ionicons.ribbon_outline),
+  (Segment.working, 'Working professional', 'Already employed', Ionicons.briefcase_outline),
 ];
 
 /// One screen instead of a per-question quiz: whatever the mocked Google
@@ -63,6 +65,12 @@ class _MicroProfileScreenState extends State<MicroProfileScreen> {
   String _highestQualification = '';
   bool _loading = false;
   bool _hydrated = false;
+
+  // Anchors for the two questions that sit below the fold, so the screen can
+  // scroll itself to them instead of making the student hunt for the next step.
+  final _stageKey = GlobalKey();
+  final _qualificationKey = GlobalKey();
+  bool _stageRevealed = false;
 
   bool get _isSchool => _segment == Segment.school;
   bool get _isWorking => _segment == Segment.working;
@@ -135,6 +143,24 @@ class _MicroProfileScreenState extends State<MicroProfileScreen> {
     super.dispose();
   }
 
+  /// Smoothly brings a question into view once it has been laid out.
+  void _scrollTo(GlobalKey key, {double alignment = 0.04}) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = key.currentContext;
+      if (!mounted || ctx == null) return;
+      Scrollable.ensureVisible(ctx, alignment: alignment, duration: const Duration(milliseconds: 380), curve: Curves.easeOutCubic);
+    });
+  }
+
+  /// Once the name/city/phone above are done, take the student to "which best
+  /// describes you?" (once, so it never fights a manual scroll).
+  void _revealStageIfReady() {
+    if (_stageRevealed || _segment != null) return;
+    if (_city.trim().isEmpty || (_needsPhone && !_isValidPhone)) return;
+    _stageRevealed = true;
+    _scrollTo(_stageKey);
+  }
+
   void _selectSegment(Segment s) {
     HapticFeedback.selectionClick();
     setState(() {
@@ -144,6 +170,8 @@ class _MicroProfileScreenState extends State<MicroProfileScreen> {
       if (s != Segment.working) _highestQualification = '';
       _segment = s;
     });
+    // Working reveals the follow-up question below the cards: scroll to it.
+    if (s == Segment.working) _scrollTo(_qualificationKey, alignment: 0.1);
   }
 
   void _back() {
@@ -195,7 +223,6 @@ class _MicroProfileScreenState extends State<MicroProfileScreen> {
     _hydrateFromUser(context.read<AppState>().user);
     final topInset = MediaQuery.of(context).padding.top;
     final bottomInset = MediaQuery.of(context).padding.bottom;
-    final percent = (_progress * 100).round();
     final isTablet = AppBreakpoints.of(context) == AppBreakpoint.tablet;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -221,30 +248,12 @@ class _MicroProfileScreenState extends State<MicroProfileScreen> {
                 ],
               ),
             ),
+            // Whole-flow progress, shared with the Goals step: school students finish here
+            // (1 of 1), everyone else still has Goals to go (1 of 2), so this never says
+            // 100% while a step remains.
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(AppRadius.sm / 2),
-                      child: TweenAnimationBuilder<double>(
-                        tween: Tween(end: _progress.clamp(0.04, 1.0)),
-                        duration: const Duration(milliseconds: 280),
-                        curve: Curves.easeOutCubic,
-                        builder: (context, value, _) => LinearProgressIndicator(
-                          value: value,
-                          minHeight: AppSpacing.sm - AppSpacing.xs / 2,
-                          backgroundColor: AppColors.gray100,
-                          valueColor: const AlwaysStoppedAnimation(AppColors.brand),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Text('$percent%', style: AppTextStyles.label.copyWith(color: AppColors.ink, fontWeight: AppFontWeight.medium)),
-                ],
-              ),
+              child: OnboardingProgress(step: 1, totalSteps: _isSchool ? 1 : 2, stepFill: _progress),
             ),
             Expanded(
               child: SingleChildScrollView(
@@ -282,6 +291,12 @@ class _MicroProfileScreenState extends State<MicroProfileScreen> {
                             icon: Ionicons.location_outline,
                             options: mockCities,
                             onChanged: (v) => setState(() => _city = v),
+                            // Only onSubmitted (never onSelected): AutocompleteField treats onSelected as
+                            // "commit and clear", which wiped the city the moment it was picked.
+                            onSubmitted: (_) {
+                              FocusScope.of(context).unfocus();
+                              _revealStageIfReady();
+                            },
                           ),
                         ),
                       )
@@ -295,6 +310,12 @@ class _MicroProfileScreenState extends State<MicroProfileScreen> {
                         icon: Ionicons.location_outline,
                         options: mockCities,
                         onChanged: (v) => setState(() => _city = v),
+                        // Only onSubmitted (never onSelected): AutocompleteField treats onSelected as
+                        // "commit and clear", which wiped the city the moment it was picked.
+                        onSubmitted: (_) {
+                          FocusScope.of(context).unfocus();
+                          _revealStageIfReady();
+                        },
                       ),
                     ],
                     // Only Google/email sign-ups reach here — phone sign-up's
@@ -309,23 +330,48 @@ class _MicroProfileScreenState extends State<MicroProfileScreen> {
                         icon: Ionicons.call_outline,
                         keyboardType: TextInputType.phone,
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) {
+                          setState(() {});
+                          if (_isValidPhone) _revealStageIfReady();
+                        },
                       ),
                     ],
-                    const FieldLabel('What stage are you at?'),
-                    Wrap(
-                      spacing: AppSpacing.sm,
-                      runSpacing: AppSpacing.sm,
-                      children: _segmentOptions
-                          .map((s) => AppChip(label: s.$2, selected: _segment == s.$1, onPressed: () => _selectSegment(s.$1)))
-                          .toList(),
+                    Padding(
+                      key: _stageKey,
+                      padding: const EdgeInsets.only(top: AppSpacing.xxl, bottom: AppSpacing.lg),
+                      child: Text(
+                        'Which best describes you?',
+                        style: AppTextStyles.h3.copyWith(color: AppColors.ink, fontWeight: AppFontWeight.semibold),
+                      ),
+                    ),
+                    // Two by two on a tablet, one per row on a phone.
+                    LayoutBuilder(
+                      builder: (context, box) {
+                        final cardWidth = isTablet ? (box.maxWidth - AppSpacing.md) / 2 : box.maxWidth;
+                        return Wrap(
+                          spacing: AppSpacing.md,
+                          children: [
+                            for (final s in _segmentOptions)
+                              SizedBox(
+                                width: cardWidth,
+                                child: _StageCard(
+                                  title: s.$2,
+                                  description: s.$3,
+                                  icon: s.$4,
+                                  selected: _segment == s.$1,
+                                  onTap: () => _selectSegment(s.$1),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
                     ),
                     // The one and only follow-up question — everything else
                     // (class/board, college/course/semester, work history)
                     // is asked later via Profile's "Basic info" checklist,
                     // not here. See this class's own doc comment.
                     if (_isWorking) ...[
-                      const FieldLabel("What's the highest level you've completed?"),
+                      KeyedSubtree(key: _qualificationKey, child: const FieldLabel("What's the highest level you've completed?")),
                       Wrap(
                         spacing: AppSpacing.sm,
                         runSpacing: AppSpacing.sm,
@@ -349,6 +395,94 @@ class _MicroProfileScreenState extends State<MicroProfileScreen> {
             ),
           ],
         )),
+      ),
+    );
+  }
+}
+
+/// One answer to "which best describes you": icon badge, title, a one-line
+/// description and a check when chosen. Same selection language as the Goals
+/// tiles and AppChip (neutral fill, white + 2px yellow stroke when selected),
+/// so yellow only marks the chosen answer.
+class _StageCard extends StatelessWidget {
+  final String title;
+  final String description;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _StageCard({required this.title, required this.description, required this.icon, required this.selected, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: '$title. $description',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: AppSpacing.md),
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.white : AppColors.offWhite,
+            borderRadius: BorderRadius.circular(AppRadius.xl),
+            // The 2px border keeps both states the same size. No drop shadow on the gray
+            // cards: a blurred shadow around a gray fill made their edge look fuzzy, so the
+            // edge is just the crisp fill against white.
+            border: Border.all(color: selected ? AppColors.brand : AppColors.offWhite, width: 2),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: selected ? AppColors.offWhite : AppColors.white, shape: BoxShape.circle),
+                child: Icon(icon, size: 20, color: selected ? AppColors.ink : AppColors.gray500),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // One line, scaled down a touch if needed, so a title never breaks mid-phrase.
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        title,
+                        maxLines: 1,
+                        softWrap: false,
+                        style: AppTextStyles.body.copyWith(color: AppColors.ink, fontWeight: selected ? AppFontWeight.semibold : AppFontWeight.medium, height: 1.25),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: AppSpacing.xs),
+                      child: Text(
+                        description,
+                        style: AppTextStyles.label.copyWith(color: selected ? AppColors.gray500 : AppColors.gray400, fontWeight: AppFontWeight.medium, height: 1.3),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              // Always laid out, only painted when selected, so nothing shifts on tap.
+              SizedBox(
+                width: 24,
+                height: 24,
+                child: selected
+                    ? Container(
+                        decoration: const BoxDecoration(color: AppColors.brand, shape: BoxShape.circle),
+                        child: const Icon(Ionicons.checkmark, size: 15, color: AppColors.onBrand),
+                      )
+                    : null,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

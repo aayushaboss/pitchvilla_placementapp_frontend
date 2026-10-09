@@ -389,8 +389,8 @@ class _QuestionBody extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: selected ? AppColors.white : AppColors.offWhite,
                     borderRadius: BorderRadius.circular(AppRadius.xl),
-                    border: Border.all(color: selected ? AppColors.brand : Colors.transparent, width: 2),
-                    boxShadow: selected ? null : AppShadows.soft,
+                    // No drop shadow on the gray options: it made their edge look fuzzy.
+                    border: Border.all(color: selected ? AppColors.brand : AppColors.offWhite, width: 2),
                   ),
                   child: Text(
                     opt,
